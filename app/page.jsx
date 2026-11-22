@@ -35,6 +35,7 @@ export default function Home() {
   const [isConsentOpen, setIsConsentOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [captureTab, setCaptureTab] = useState(true);
+  const [sttEngine, setSttEngine] = useState('native'); // 'native' | 'deepgram'
   const [meetingTitle, setMeetingTitle] = useState('');
   const [duration, setDuration] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -99,7 +100,7 @@ export default function Home() {
         }
       );
 
-      await engine.start({ captureTab });
+      await engine.start({ captureTab, preferredEngine: sttEngine });
       audioEngineRef.current = engine;
       setIsRecording(true);
 
@@ -266,30 +267,44 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* Audio Source Toggles */}
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 pt-1">
-                    <span className="text-cyan-400 font-semibold">Audio Sources:</span>
-                    <label className="flex items-center gap-2 cursor-pointer bg-[#08181a] px-3 py-1.5 rounded-lg border border-cyan-900/40 hover:border-cyan-700/60 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={true}
-                        disabled
-                        className="rounded text-cyan-500 focus:ring-0"
-                      />
-                      <Mic className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Microphone (Always On)</span>
-                    </label>
+                  {/* Audio Source Toggles & STT Engine Selector */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-300 pt-1">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="text-cyan-400 font-semibold">Sources:</span>
+                      <label className="flex items-center gap-1.5 cursor-pointer bg-[#08181a] px-3 py-1.5 rounded-lg border border-cyan-900/40 hover:border-cyan-700/60 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={true}
+                          disabled
+                          className="rounded text-cyan-500 focus:ring-0"
+                        />
+                        <Mic className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Microphone</span>
+                      </label>
 
-                    <label className="flex items-center gap-2 cursor-pointer bg-[#08181a] px-3 py-1.5 rounded-lg border border-cyan-900/40 hover:border-cyan-700/60 transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={captureTab}
-                        onChange={(e) => setCaptureTab(e.target.checked)}
-                        className="rounded text-cyan-500 focus:ring-0 cursor-pointer"
-                      />
-                      <Monitor className="w-3.5 h-3.5 text-teal-300" />
-                      <span>Shared Browser Tab Audio (Google Meet / Teams)</span>
-                    </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer bg-[#08181a] px-3 py-1.5 rounded-lg border border-cyan-900/40 hover:border-cyan-700/60 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={captureTab}
+                          onChange={(e) => setCaptureTab(e.target.checked)}
+                          className="rounded text-cyan-500 focus:ring-0 cursor-pointer"
+                        />
+                        <Monitor className="w-3.5 h-3.5 text-teal-300" />
+                        <span>Tab Audio (Meet/Teams)</span>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-cyan-400 font-semibold">Engine:</span>
+                      <select
+                        value={sttEngine}
+                        onChange={(e) => setSttEngine(e.target.value)}
+                        className="bg-[#08181a] border border-cyan-500/50 rounded-lg px-2.5 py-1.5 text-xs text-cyan-300 focus:outline-none cursor-pointer hover:border-cyan-400 transition-colors"
+                      >
+                        <option value="native">⚡ Web Speech (Fastest &lt;0.2s, 100% Free)</option>
+                        <option value="deepgram">☁️ Deepgram Nova-2 (Cloud AI Diarization)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

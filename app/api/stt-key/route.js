@@ -7,3 +7,4 @@ export async function GET() {
   }
   return NextResponse.json({ available: false, provider: 'native' });
 }
+
