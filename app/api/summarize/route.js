@@ -12,10 +12,47 @@ export async function POST(request) {
       .map(t => `[${t.time || '00:00'}] ${t.speaker}: ${t.text}`)
       .join('\n');
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
+    const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
 
-    // If Gemini API Key is present in environment
-    if (process.env.GEMINI_API_KEY) {
+    // 1. If Grok (xAI) API Key is present
+    if (grokKey) {
+      try {
+        const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${grokKey}`
+          },
+          body: JSON.stringify({
+            model: 'grok-beta',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are Vinxa Live AI, an enterprise intelligence assistant. You must respond strictly in JSON matching the exact schema: {"summary": "string", "decisions": ["string"], "actionItems": [{"id": 1, "task": "string", "owner": "string", "deadline": "string", "completed": false}]}'
+              },
+              {
+                role: 'user',
+                content: `Analyze this meeting transcript and output JSON:\n\n${conversationText}`
+              }
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.2
+          })
+        });
+
+        if (grokRes.ok) {
+          const grokData = await grokRes.json();
+          const parsed = JSON.parse(grokData.choices[0].message.content);
+          return NextResponse.json(parsed);
+        }
+      } catch (grokErr) {
+        console.warn('Grok API call failed, falling back to next provider', grokErr);
+      }
+    }
+
+    // 2. If Gemini API Key is present in environment
+    if (geminiKey) {
       try {
         const prompt = `You are Vinxa Live AI, an enterprise intelligence assistant. Analyze this meeting transcript and output strictly valid JSON with this exact schema:
 {
@@ -29,7 +66,7 @@ export async function POST(request) {
 Meeting Transcript:
 ${conversationText}`;
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

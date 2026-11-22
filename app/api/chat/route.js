@@ -22,8 +22,43 @@ Full Transcript:
 ${(transcript || []).map(t => `[${t.time}] ${t.speaker}: ${t.text}`).join('\n')}
 `;
 
-    // If Gemini Key is present
-    if (process.env.GEMINI_API_KEY) {
+    const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
+
+    // 1. If Grok (xAI) API Key is present
+    if (grokKey) {
+      try {
+        const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${grokKey}`
+          },
+          body: JSON.stringify({
+            model: 'grok-beta',
+            messages: [
+              {
+                role: 'system',
+                content: `You are Vinxa Q&A Agent. Answer the user's question strictly using the meeting context provided below. If the answer is not mentioned, state clearly that it was not discussed. Keep answers professional and direct.\n\nContext:\n${contextText}`
+              },
+              { role: 'user', content: question }
+            ],
+            temperature: 0.3
+          })
+        });
+
+        if (grokRes.ok) {
+          const data = await grokRes.json();
+          const answer = data.choices[0].message.content;
+          return NextResponse.json({ answer });
+        }
+      } catch (grokErr) {
+        console.warn('Grok chat failed, falling back to next provider', grokErr);
+      }
+    }
+
+    // 2. If Gemini Key is present
+    if (geminiKey) {
       try {
         const prompt = `You are Vinxa Q&A Agent. Answer the user's question strictly using the meeting context provided below. If the answer is not mentioned, state clearly that it was not discussed. Keep answers professional and direct.
 
@@ -32,7 +67,7 @@ ${contextText}
 
 Question: ${question}`;
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
