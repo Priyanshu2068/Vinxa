@@ -12,10 +12,45 @@ export async function POST(request) {
       .map(t => `[${t.time || '00:00'}] ${t.speaker}: ${t.text}`)
       .join('\n');
 
-    const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY;
+    const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
 
-    // 1. If Grok (xAI) API Key is present
+    // 1. Primary Engine: Google Gemini 1.5 Flash (Ultra-fast, 1M context, native JSON)
+    if (geminiKey) {
+      try {
+        const prompt = `You are Vinxa Live AI, an enterprise intelligence assistant. Analyze this meeting transcript and output strictly valid JSON with this exact schema:
+{
+  "summary": "2-3 concise paragraphs summarizing main discussion, challenges, and outcomes",
+  "decisions": ["List of clear, final decisions made during the call"],
+  "actionItems": [
+    { "id": 1, "task": "Concrete task description", "owner": "Name or Speaker", "deadline": "Expected timeframe or Soon", "completed": false }
+  ]
+}
+
+Meeting Transcript:
+${conversationText}`;
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          const parsed = JSON.parse(rawText);
+          return NextResponse.json(parsed);
+        }
+      } catch (apiErr) {
+        console.warn('Gemini API call failed, trying backup', apiErr);
+      }
+    }
+
+    // 2. Secondary Engine: Grok / xAI
     if (grokKey) {
       try {
         const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -47,42 +82,7 @@ export async function POST(request) {
           return NextResponse.json(parsed);
         }
       } catch (grokErr) {
-        console.warn('Grok API call failed, falling back to next provider', grokErr);
-      }
-    }
-
-    // 2. If Gemini API Key is present in environment
-    if (geminiKey) {
-      try {
-        const prompt = `You are Vinxa Live AI, an enterprise intelligence assistant. Analyze this meeting transcript and output strictly valid JSON with this exact schema:
-{
-  "summary": "2-3 concise paragraphs summarizing main discussion, challenges, and outcomes",
-  "decisions": ["List of clear, final decisions made during the call"],
-  "actionItems": [
-    { "id": 1, "task": "Concrete task description", "owner": "Name or Speaker", "deadline": "Expected timeframe or Soon", "completed": false }
-  ]
-}
-
-Meeting Transcript:
-${conversationText}`;
-
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json' }
-          })
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          const parsed = JSON.parse(rawText);
-          return NextResponse.json(parsed);
-        }
-      } catch (apiErr) {
-        console.warn('Gemini API call failed, falling back to heuristic synthesis', apiErr);
+        console.warn('Grok API call failed', grokErr);
       }
     }
 

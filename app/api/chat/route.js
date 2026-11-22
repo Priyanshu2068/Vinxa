@@ -22,10 +22,38 @@ Full Transcript:
 ${(transcript || []).map(t => `[${t.time}] ${t.speaker}: ${t.text}`).join('\n')}
 `;
 
-    const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY;
+    const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
 
-    // 1. If Grok (xAI) API Key is present
+    // 1. Primary Engine: Google Gemini 1.5 Flash
+    if (geminiKey) {
+      try {
+        const prompt = `You are Vinxa Q&A Agent. Answer the user's question strictly using the meeting context provided below. If the answer is not mentioned, state clearly that it was not discussed. Keep answers professional and direct.
+
+Context:
+${contextText}
+
+Question: ${question}`;
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          return NextResponse.json({ answer });
+        }
+      } catch (err) {
+        console.warn('Gemini chat failed, trying backup', err);
+      }
+    }
+
+    // 2. Secondary Engine: Grok / xAI
     if (grokKey) {
       try {
         const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
@@ -53,35 +81,7 @@ ${(transcript || []).map(t => `[${t.time}] ${t.speaker}: ${t.text}`).join('\n')}
           return NextResponse.json({ answer });
         }
       } catch (grokErr) {
-        console.warn('Grok chat failed, falling back to next provider', grokErr);
-      }
-    }
-
-    // 2. If Gemini Key is present
-    if (geminiKey) {
-      try {
-        const prompt = `You are Vinxa Q&A Agent. Answer the user's question strictly using the meeting context provided below. If the answer is not mentioned, state clearly that it was not discussed. Keep answers professional and direct.
-
-Context:
-${contextText}
-
-Question: ${question}`;
-
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          return NextResponse.json({ answer });
-        }
-      } catch (err) {
-        console.warn('Gemini chat failed, falling back to local context search', err);
+        console.warn('Grok chat failed', grokErr);
       }
     }
 
