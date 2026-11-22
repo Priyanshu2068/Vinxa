@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { getMeetingById } from '../../../lib/storage';
+import { getMeetingById, saveMeeting } from '../../../lib/storage';
 import { Calendar, Clock, Sparkles, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -9,23 +9,63 @@ export default function ShareableNotesPage() {
   const params = useParams();
   const meetingId = params.id;
   const [meeting, setMeeting] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // 1. First priority: Check URL data payload '?d=' (guaranteed cross-device sharing)
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dataParam = urlParams.get('d');
+      if (dataParam) {
+        const decoded = JSON.parse(decodeURIComponent(atob(decodeURIComponent(dataParam))));
+        if (decoded && (decoded.title || decoded.summary)) {
+          setMeeting(decoded);
+          saveMeeting(decoded);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (urlErr) {
+      console.warn('URL data decode error, trying storage fallback', urlErr);
+    }
+
+    // 2. Second priority: Local browser storage
     if (meetingId) {
       const found = getMeetingById(meetingId);
       if (found) {
         setMeeting(found);
-      } else {
-        // Fetch from server cache for cross-device shared views
-        fetch(`/api/meetings?id=${meetingId}`)
-          .then(res => res.ok ? res.json() : null)
-          .then(data => {
-            if (data && !data.error) setMeeting(data);
-          })
-          .catch(() => {});
+        setLoading(false);
+        return;
       }
+
+      // 3. Third priority: Server API route
+      fetch(`/api/meetings?id=${meetingId}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && !data.error) {
+            setMeeting(data);
+            saveMeeting(data);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, [meetingId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 text-center bg-[#081315]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-cyan-300/80">Loading shared intelligence notes...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!meeting) {
     return (

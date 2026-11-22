@@ -158,7 +158,27 @@ ${(meeting.transcript || []).map(t => `**[${t.time}] ${t.speaker}:** ${t.text}`)
   };
 
   const handleCopyShareLink = () => {
-    const shareUrl = `${window.location.origin}/share/${meeting.id}`;
+    let shareUrl = `${window.location.origin}/share/${meeting.id}`;
+    try {
+      // Pack full meeting notes snapshot into URL so it opens on ANY device/browser
+      const snapshot = {
+        id: meeting.id,
+        title: meeting.title,
+        date: meeting.date,
+        durationSeconds: meeting.durationSeconds,
+        sources: meeting.sources,
+        summary: meeting.summary,
+        decisions: meeting.decisions,
+        actionItems: meeting.actionItems,
+        highlights: meeting.highlights,
+        transcript: meeting.transcript?.slice(-50) || []
+      };
+      const encoded = encodeURIComponent(btoa(encodeURIComponent(JSON.stringify(snapshot))));
+      shareUrl = `${window.location.origin}/share/${meeting.id}?d=${encoded}`;
+    } catch (err) {
+      console.warn('URL compression fallback:', err);
+    }
+
     navigator.clipboard.writeText(shareUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
