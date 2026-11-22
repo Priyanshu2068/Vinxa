@@ -1,7 +1,7 @@
 # Vinxa Live (Web Track) — One-Page PRD
 **Product**: Vinxa Live — AI-Powered Enterprise Meeting Notetaker  
-**Event**: Escape Velocity Hackathon 2.0 (EVOCS & Velloe)  
-**Track**: Track 01 — Vinxa Web  
+**Platform**: Vinxa Enterprise Intelligence Platform  
+**Surface**: Vinxa Web  
 
 ---
 

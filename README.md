@@ -1,10 +1,10 @@
 # Vinxa Live — Web-Based AI Meeting Notetaker
-> **Escape Velocity Hackathon 2.0 (EVOCS & Velloe) — Track 01: Vinxa Web**  
+> **Enterprise Intelligence & Real-Time Meeting Notetaker**  
 > *"Open a tab. Start talking. Get clean notes before your next meeting starts."*
 
 ---
 
-## 🚀 Features (Must-Haves & Stretch Goals)
+## 🚀 Key Features
 
 - 🎙️ **Dual-Audio Capture**: Captures microphone (`getUserMedia`) + shared browser tab audio (`getDisplayMedia`) merged via Web Audio API.
 - ⚡ **Sub-2s Streaming Transcription**: Real-time speech-to-text with interim partials (gray text) and finalized transcript (white text).
@@ -22,7 +22,7 @@
   - Download as **Markdown (`.md`)**
   - Instant **Print / PDF export**
 - 🔗 **Shareable Read-Only Link**: Clean, public view (`/share/[id]`) with no edit/delete buttons for seamless stakeholder sharing.
-- 🎯 **Stretch Goals Implemented**:
+- 🎯 **Advanced Capabilities**:
   - **Live Moment Highlight**: Bookmark important moments during live calls with one-click jump-to-transcript.
   - **Ask Vinxa (Meeting Q&A)**: Ask natural language questions (*"What did we decide on pricing?"*) directly answered from meeting context.
 

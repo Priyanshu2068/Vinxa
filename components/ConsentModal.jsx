@@ -23,7 +23,7 @@ export default function ConsentModal({ isOpen, onConfirm, onDeny }) {
               Meeting Recording Consent
             </h3>
             <p className="text-xs text-cyan-300/70 mt-1">
-              Required by Escape Velocity 2.0 Privacy & Trust Rubric
+              Required by Vinxa Enterprise Privacy & Compliance Guard
             </p>
           </div>
         </div>
