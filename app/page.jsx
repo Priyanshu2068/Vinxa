@@ -36,6 +36,7 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [captureTab, setCaptureTab] = useState(true);
   const [sttEngine, setSttEngine] = useState('native'); // 'native' | 'deepgram'
+  const [activeSpeaker, setActiveSpeaker] = useState('Speaker 1');
   const [meetingTitle, setMeetingTitle] = useState('');
   const [duration, setDuration] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -86,6 +87,7 @@ export default function Home() {
       const engine = new VinxaAudioEngine(
         // Transcript Update
         ({ text, isFinal, speaker, timestamp }) => {
+          if (speaker) setActiveSpeaker(speaker);
           const timeStr = `${new Date().getMinutes().toString().padStart(2, '0')}:${new Date().getSeconds().toString().padStart(2, '0')}`;
           if (isFinal) {
             setTranscriptLines(prev => [...prev, { speaker, text, time: timeStr }]);
@@ -123,6 +125,15 @@ export default function Home() {
       note: `Highlighted moment at ${timestamp}`
     };
     setHighlights(prev => [...prev, newHighlight]);
+  };
+
+  const handleToggleSpeaker = () => {
+    if (audioEngineRef.current) {
+      const nextSpeaker = audioEngineRef.current.toggleSpeaker();
+      setActiveSpeaker(nextSpeaker);
+    } else {
+      setActiveSpeaker(prev => prev === 'Speaker 1' ? 'Speaker 2' : 'Speaker 1');
+    }
   };
 
   const handleStopRecording = async () => {
@@ -217,6 +228,8 @@ export default function Home() {
           durationSeconds={duration}
           audioLevel={audioLevel}
           sources={captureTab ? ['Mic', 'Tab Audio'] : ['Mic']}
+          currentSpeaker={activeSpeaker}
+          onToggleSpeaker={handleToggleSpeaker}
           onAddHighlight={handleAddHighlight}
           onStop={handleStopRecording}
         />

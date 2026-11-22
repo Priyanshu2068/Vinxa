@@ -434,16 +434,22 @@ ${(meeting.transcript || []).map(t => `**[${t.time}] ${t.speaker}:** ${t.text}`)
               {/* Quick Presets */}
               <div className="py-2 flex flex-wrap gap-1.5 border-t border-cyan-950">
                 <button
-                  onClick={() => handleAskQuestion('What did we decide on pricing?')}
+                  onClick={() => handleAskQuestion('What were the main topics discussed in this meeting?')}
                   className="px-2.5 py-1 rounded bg-cyan-950/60 hover:bg-cyan-900/60 text-[10px] text-cyan-300 border border-cyan-800/40"
                 >
-                  &quot;Pricing decision?&quot;
+                  &quot;Main topics?&quot;
                 </button>
                 <button
-                  onClick={() => handleAskQuestion('List all action items with owners')}
+                  onClick={() => handleAskQuestion('List all action items and next steps with owners')}
                   className="px-2.5 py-1 rounded bg-cyan-950/60 hover:bg-cyan-900/60 text-[10px] text-cyan-300 border border-cyan-800/40"
                 >
                   &quot;Action items?&quot;
+                </button>
+                <button
+                  onClick={() => handleAskQuestion('What decisions were confirmed during the call?')}
+                  className="px-2.5 py-1 rounded bg-cyan-950/60 hover:bg-cyan-900/60 text-[10px] text-cyan-300 border border-cyan-800/40"
+                >
+                  &quot;Decisions?&quot;
                 </button>
               </div>
 

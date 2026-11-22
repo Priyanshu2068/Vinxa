@@ -1,10 +1,12 @@
 'use client';
-import { Bookmark, Square, Volume2 } from 'lucide-react';
+import { Bookmark, Square, Volume2, Users } from 'lucide-react';
 
 export default function RecordingBanner({
   durationSeconds,
   audioLevel,
   sources,
+  currentSpeaker = 'Speaker 1',
+  onToggleSpeaker,
   onAddHighlight,
   onStop
 }) {
@@ -51,15 +53,25 @@ export default function RecordingBanner({
           <span className="text-[10px] font-mono text-red-300/80">{audioLevel}%</span>
         </div>
 
-        {/* Right: Actions (Highlight moment & Stop) */}
+        {/* Right: Actions (Speaker Switch, Highlight moment & Stop) */}
         <div className="flex items-center gap-2.5">
+          {/* Manual Speaker Switch Toggle */}
+          <button
+            onClick={onToggleSpeaker}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-950 hover:bg-teal-900 text-teal-300 border border-teal-500/50 transition-colors shadow-sm"
+            title="Click to toggle between Speaker 1 and Speaker 2"
+          >
+            <Users className="w-3.5 h-3.5 text-teal-400" />
+            <span>{currentSpeaker} <span className="font-normal opacity-75">(Switch)</span></span>
+          </button>
+
           <button
             onClick={onAddHighlight}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-600/40 transition-colors shadow-sm"
             title="Mark this key moment in the transcript"
           >
             <Bookmark className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400/20" />
-            <span>Highlight Moment</span>
+            <span>Highlight</span>
           </button>
 
           <button

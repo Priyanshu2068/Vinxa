@@ -12,18 +12,18 @@ export async function POST(request) {
       .map(t => `[${t.time || '00:00'}] ${t.speaker}: ${t.text}`)
       .join('\n');
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
+    const geminiKey = (process.env.GEMINI_API_KEY || '').trim();
+    const grokKey = (process.env.GROK_API_KEY || process.env.XAI_API_KEY || '').trim();
 
     // 1. Primary Engine: Google Gemini 1.5 Flash (Ultra-fast, 1M context, native JSON)
     if (geminiKey) {
       try {
-        const prompt = `You are Vinxa Live AI, an enterprise intelligence assistant. Analyze this meeting transcript and output strictly valid JSON with this exact schema:
+        const prompt = `You are Vinxa Live AI, an enterprise intelligence assistant. Analyze this exact meeting transcript and output strictly valid JSON with this exact schema:
 {
-  "summary": "2-3 concise paragraphs summarizing main discussion, challenges, and outcomes",
-  "decisions": ["List of clear, final decisions made during the call"],
+  "summary": "Concise paragraph strictly summarizing what was actually discussed in this specific transcript.",
+  "decisions": ["Clear decisions made based on this transcript (or empty array if none)"],
   "actionItems": [
-    { "id": 1, "task": "Concrete task description", "owner": "Name or Speaker", "deadline": "Expected timeframe or Soon", "completed": false }
+    { "id": 1, "task": "Concrete task mentioned in speech", "owner": "Speaker or person named", "deadline": "Mentioned timeframe or Soon", "completed": false }
   ]
 }
 
@@ -43,10 +43,15 @@ ${conversationText}`;
           const data = await res.json();
           const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
           const parsed = JSON.parse(rawText);
-          return NextResponse.json(parsed);
+          if (parsed && parsed.summary) {
+            return NextResponse.json(parsed);
+          }
+        } else {
+          const errDetail = await res.text();
+          console.error('Gemini API Error (Status ' + res.status + '):', errDetail);
         }
       } catch (apiErr) {
-        console.warn('Gemini API call failed, trying backup', apiErr);
+        console.error('Gemini API call failed:', apiErr);
       }
     }
 
@@ -64,11 +69,11 @@ ${conversationText}`;
             messages: [
               {
                 role: 'system',
-                content: 'You are Vinxa Live AI, an enterprise intelligence assistant. You must respond strictly in JSON matching the exact schema: {"summary": "string", "decisions": ["string"], "actionItems": [{"id": 1, "task": "string", "owner": "string", "deadline": "string", "completed": false}]}'
+                content: 'You are Vinxa Live AI. You must respond strictly in JSON matching: {"summary": "string", "decisions": ["string"], "actionItems": [{"id": 1, "task": "string", "owner": "string", "deadline": "string", "completed": false}]}'
               },
               {
                 role: 'user',
-                content: `Analyze this meeting transcript and output JSON:\n\n${conversationText}`
+                content: `Analyze this transcript strictly:\n\n${conversationText}`
               }
             ],
             response_format: { type: 'json_object' },
@@ -82,42 +87,59 @@ ${conversationText}`;
           return NextResponse.json(parsed);
         }
       } catch (grokErr) {
-        console.warn('Grok API call failed', grokErr);
+        console.error('Grok API call failed:', grokErr);
       }
     }
 
-    // Heuristic Fallback Engine (Guarantees 100% reliable demo without needing API keys)
-    const sentences = transcript.map(t => t.text).filter(Boolean);
-    const summary = `The meeting covered key discussion points regarding "${title || 'Meeting Agenda'}". Participants reviewed operational requirements, agreed on team responsibilities, and aligned on delivering core deliverables before deadline. Real-time audio and live transcription were captured accurately.`;
+    // 3. Dynamic Natural Fallback (Extracts directly from the ACTUAL words spoken, never static fake text)
+    const validLines = transcript.filter(t => t.text && t.text.trim().length > 0);
+    const spokenSentences = validLines.map(t => t.text.trim());
+    const firstSpeaker = validLines[0]?.speaker || 'Speaker 1';
 
-    const decisions = [
-      'Approved core architecture and agreed to ship must-have requirements first.',
-      'Confirmed privacy consent dialog and active recording indicator satisfy compliance rules.',
-      'Selected Direct In-Context retrieval for fast, deterministic meeting Q&A.'
-    ];
+    let dynamicSummary = '';
+    if (spokenSentences.length === 0) {
+      dynamicSummary = 'Brief audio session recorded. No audible speech segments detected in this transcript.';
+    } else {
+      dynamicSummary = `Discussion points captured for "${title || 'Meeting Sync'}": ` + spokenSentences.slice(0, 4).join(' ');
+    }
 
-    const actionItems = sentences.slice(0, 3).map((s, idx) => ({
-      id: idx + 1,
-      task: `Review and finalize: "${s.slice(0, 75)}..."`,
-      owner: idx % 2 === 0 ? 'Lead Dev' : 'Product Owner',
-      deadline: idx === 0 ? 'Today EOD' : 'Before next sync',
-      completed: false
-    }));
+    // Detect real decisions from actual words
+    const decisionKeywords = ['agree', 'decid', 'will', 'plan', 'choose', 'confirm', 'final'];
+    const dynamicDecisions = validLines
+      .filter(line => decisionKeywords.some(k => line.text.toLowerCase().includes(k)))
+      .map(line => `${line.speaker}: "${line.text}"`);
 
-    if (actionItems.length === 0) {
-      actionItems.push({
+    if (dynamicDecisions.length === 0 && validLines.length > 0) {
+      dynamicDecisions.push(`Aligned on: "${validLines[validLines.length - 1].text.slice(0, 90)}"`);
+    }
+
+    // Extract actual action items from spoken phrases
+    const actionKeywords = ['need', 'must', 'have to', 'should', 'will', 'action', 'do', 'make', 'send', 'test', 'finish', 'complete'];
+    const dynamicActionItems = validLines
+      .filter(line => actionKeywords.some(k => line.text.toLowerCase().includes(k)))
+      .slice(0, 4)
+      .map((line, idx) => ({
+        id: idx + 1,
+        task: line.text,
+        owner: line.speaker || firstSpeaker,
+        deadline: 'Pending follow-up',
+        completed: false
+      }));
+
+    if (dynamicActionItems.length === 0 && validLines.length > 0) {
+      dynamicActionItems.push({
         id: 1,
-        task: 'Distribute meeting notes and sync with enterprise backlog',
-        owner: 'Meeting Host',
-        deadline: 'Tomorrow 10 AM',
+        task: `Follow up on: "${validLines[0].text.slice(0, 80)}"`,
+        owner: firstSpeaker,
+        deadline: 'Next meeting',
         completed: false
       });
     }
 
     return NextResponse.json({
-      summary,
-      decisions,
-      actionItems
+      summary: dynamicSummary,
+      decisions: dynamicDecisions,
+      actionItems: dynamicActionItems
     });
   } catch (error) {
     console.error('Error generating summary:', error);

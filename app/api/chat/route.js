@@ -22,8 +22,8 @@ Full Transcript:
 ${(transcript || []).map(t => `[${t.time}] ${t.speaker}: ${t.text}`).join('\n')}
 `;
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
+    const geminiKey = (process.env.GEMINI_API_KEY || '').trim();
+    const grokKey = (process.env.GROK_API_KEY || process.env.XAI_API_KEY || '').trim();
 
     // 1. Primary Engine: Google Gemini 1.5 Flash
     if (geminiKey) {
@@ -46,10 +46,12 @@ Question: ${question}`;
         if (res.ok) {
           const data = await res.json();
           const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          return NextResponse.json({ answer });
+          if (answer) return NextResponse.json({ answer });
+        } else {
+          console.error('Gemini Chat Error:', await res.text());
         }
       } catch (err) {
-        console.warn('Gemini chat failed, trying backup', err);
+        console.error('Gemini chat failed:', err);
       }
     }
 
@@ -85,35 +87,40 @@ Question: ${question}`;
       }
     }
 
-    // Smart Local In-Context Search Fallback
+    // 3. Dynamic In-Context Search Fallback (strictly grounded in THIS meeting's transcript)
     const qLower = question.toLowerCase();
-    let answer = '';
+    const spokenLines = transcript || [];
 
     if (qLower.includes('decision') || qLower.includes('decide')) {
-      answer = decisions && decisions.length > 0 
-        ? `Here are the key decisions from the meeting:\n• ${decisions.join('\n• ')}`
-        : 'No specific decisions were finalized during this call.';
-    } else if (qLower.includes('action') || qLower.includes('todo') || qLower.includes('task') || qLower.includes('who')) {
-      answer = actionItems && actionItems.length > 0
-        ? `Here are the assigned action items:\n` + actionItems.map(a => `• ${a.task} — Assigned to: ${a.owner} (${a.deadline})`).join('\n')
-        : 'No specific action items were logged.';
-    } else if (qLower.includes('pricing') || qLower.includes('cost') || qLower.includes('money')) {
-      const match = (transcript || []).find(t => t.text.toLowerCase().includes('pricing') || t.text.toLowerCase().includes('cost'));
-      answer = match 
-        ? `Regarding pricing, ${match.speaker} noted: "${match.text}".`
-        : 'Pricing was not explicitly debated in this session; the team prioritized core execution first.';
-    } else {
-      // Find closest matching transcript line
-      const words = qLower.split(' ').filter(w => w.length > 3);
-      const matched = (transcript || []).filter(t => words.some(w => t.text.toLowerCase().includes(w)));
-      if (matched.length > 0) {
-        answer = `Based on the discussion, ${matched[0].speaker} mentioned: "${matched[0].text}".`;
-      } else {
-        answer = `Summary of context: ${summary ? summary.slice(0, 200) + '...' : 'The conversation focused on sprint deliverables and product setup.'}`;
-      }
+      const foundDecisions = decisions && decisions.length > 0
+        ? `Decisions from this meeting:\n• ${decisions.join('\n• ')}`
+        : 'No explicit decisions were recorded in this transcript.';
+      return NextResponse.json({ answer: foundDecisions });
     }
 
-    return NextResponse.json({ answer });
+    if (qLower.includes('action') || qLower.includes('task') || qLower.includes('todo') || qLower.includes('who')) {
+      const foundActions = actionItems && actionItems.length > 0
+        ? `Action items logged:\n` + actionItems.map(a => `• ${a.task} (${a.owner || 'Unassigned'})`).join('\n')
+        : 'No specific action items were found in this conversation.';
+      return NextResponse.json({ answer: foundActions });
+    }
+
+    // Search for matching words in the actual spoken transcript
+    const searchTerms = qLower.split(/\s+/).filter(w => w.length > 3);
+    const matched = spokenLines.filter(line => 
+      searchTerms.some(term => line.text.toLowerCase().includes(term))
+    );
+
+    if (matched.length > 0) {
+      const excerpts = matched.slice(0, 3).map(m => `[${m.time || '00:00'}] ${m.speaker}: "${m.text}"`).join('\n');
+      return NextResponse.json({
+        answer: `Here is what was said in the meeting regarding your question:\n${excerpts}`
+      });
+    }
+
+    return NextResponse.json({
+      answer: `This topic ("${question}") was not mentioned in this meeting transcript. The recorded discussion was: "${summary || (spokenLines[0] ? spokenLines[0].text : 'No speech recorded')}".`
+    });
   } catch (error) {
     console.error('Chat API Error:', error);
     return NextResponse.json({ error: 'Failed to process question' }, { status: 500 });
