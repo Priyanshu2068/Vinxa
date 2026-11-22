@@ -84,3 +84,4 @@ Question: ${question}`;
     return NextResponse.json({ error: 'Failed to process question' }, { status: 500 });
   }
 }
+

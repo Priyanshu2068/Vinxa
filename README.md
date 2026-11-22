@@ -28,6 +28,20 @@
 
 ---
 
+## 💻 Tech Stack
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Framework & Core** | **Next.js 14 (App Router)** & **React 18** | High-performance server/client architecture, dynamic routing (`/notes/[id]`, `/share/[id]`). |
+| **Styling & UI Components** | **Tailwind CSS** & **Lucide React** | Sleek enterprise dark-mode UI, responsive layouts, accessibility icons, custom visualizers. |
+| **Dual Audio Capture** | **Web Audio API** & **MediaDevices API** | Real-time audio mixing of Microphone (`getUserMedia`) and Browser Tab audio (`getDisplayMedia`). |
+| **Live Speech-to-Text** | **Streaming STT Engine** | Sub-2-second continuous transcription with interim tokens (gray text) and speaker diarization. |
+| **AI Intelligence Engine** | **Gemini 1.5 Flash API** | Structured JSON extraction for Executive Summary, Decisions, and Action Items with assignees. |
+| **Local Persistence & Search**| **LocalStorage / IndexedDB** | Zero-latency client persistence, full-text search indexing across titles, transcripts, and notes. |
+| **Export Engines** | **Markdown Engine & CSS Print/PDF** | Instant clean `.md` document download and print-ready PDF reports. |
+
+---
+
 ## 🛠️ System Architecture
 
 ```
@@ -70,3 +84,4 @@ GEMINI_API_KEY=your_gemini_api_key_here
 npm run dev
 ```
 Open **[http://localhost:3000](http://localhost:3000)** in Chrome or Edge.
+

@@ -40,3 +40,4 @@ Meeting participants and team leads spend up to 20% of their working hours manua
 - **Transcription Latency**: < 2.0 seconds from speech to screen render.
 - **AI Synthesis Speed**: Under 3.5 seconds to generate summary, decisions, and action items post-call.
 - **Privacy Compliance**: 100% consent dialog completion rate prior to capture initiation.
+

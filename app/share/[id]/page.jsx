@@ -13,7 +13,17 @@ export default function ShareableNotesPage() {
   useEffect(() => {
     if (meetingId) {
       const found = getMeetingById(meetingId);
-      if (found) setMeeting(found);
+      if (found) {
+        setMeeting(found);
+      } else {
+        // Fetch from server cache for cross-device shared views
+        fetch(`/api/meetings?id=${meetingId}`)
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data && !data.error) setMeeting(data);
+          })
+          .catch(() => {});
+      }
     }
   }, [meetingId]);
 
@@ -134,3 +144,4 @@ export default function ShareableNotesPage() {
     </div>
   );
 }
+

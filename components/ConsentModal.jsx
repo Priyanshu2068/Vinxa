@@ -59,3 +59,4 @@ export default function ConsentModal({ isOpen, onConfirm, onDeny }) {
     </div>
   );
 }
+

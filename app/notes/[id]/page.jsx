@@ -483,3 +483,4 @@ ${(meeting.transcript || []).map(t => `**[${t.time}] ${t.speaker}:** ${t.text}`)
     </div>
   );
 }
+
