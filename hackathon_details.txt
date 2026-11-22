@@ -1,0 +1,368 @@
+Escape Velocity Hackathon 2.0 — Build Vinxa Live as a Team
+Home
+Our Services
+Our Products
+Our Work
+About us
+Careers
+Contact us
+A team build. Not a solo sprint.
+Register now
+Escape Velocity 2.0
+Hackathon
+Escape
+Velocity
+2.0
+Beyond the build
+Register now
+Date
+4 December 2026
+Format
+Team product build
+Venue
+ABES Engineering College
+Who's building
+Teams of 3–5 builders
+What changes in 2.0
+A team build, run like a product programme.
+Teams of 3–5 ask what a team can ship when it thinks like a product company: who the user is, what to leave out, and whether it works when real people talk over each other.
+Why we are building this
+by EVOCS
+0
+1
+Connect
+Everything
+.
+0
+2
+Understand
+Anything
+.
+0
+3
+Act
+Intelligently
+.
+Vinxa is an AI-powered enterprise intelligence and connectivity platform. It connects meetings, business applications, development tools, CRM systems, and enterprise data through intelligent agents.
+Powered by EVIA (EVOCS Virtual Intelligence Assistant) and a team of intelligent AI agents, it goes beyond meeting notes: it retrieves information, understands business context, analyses data, tracks decisions, and turns information into actions.
+Our vision
+Break application silos, unify enterprise intelligence, and make every business workflow smarter.
+What Vinxa connects
+Meetings
+Microsoft Teams, Zoom, Google Meet
+CRM systems
+Customer records and data
+Azure DevOps
+Project management tools
+Enterprise systems
+Business data
+Vinxa
+AI agents
+Vinxa Live · you build this
+The meetings layer. Your team builds it so every conversation becomes a connected, actionable record.
+The product brief
+Live
+The AI notetaker that never misses a word.
+Vinxa Live is the meetings layer of Vinxa. It captures speech, transcribes it as people talk, labels who said what, and turns the conversation into a summary, decisions, and action items that can be searched, shared, and sent on to the rest of the enterprise stack. Every track builds the same product promise on a different surface.
+01
+Capture
+Microphone, system audio, or an on-device mic array. Clear recording indicator at all times.
+02
+Transcribe live
+Streaming speech-to-text with words appearing as people speak, not after the meeting ends.
+03
+Understand
+Speaker labels, summary, key decisions, and action items with owners.
+04
+Deliver
+Searchable notes, export to Markdown or PDF, and a way to delete a recording for good.
+Required on every track
+✓
+Live transcript visible while the conversation is happening
+✓
+Speaker labels (at least "Speaker 1 / Speaker 2")
+✓
+Auto-generated summary, decisions, and action items when recording stops
+✓
+Keyword search across saved notes
+✓
+Export notes as Markdown or PDF
+✓
+Visible recording indicator and a consent prompt before capture starts
+✓
+Delete a recording and its transcript permanently
+Four tracks, one product
+Pick the surface your team will ship
+Same Vinxa Live promise, four very different engineering problems. Choose one track per team — the browser, the desktop, a mobile app, or hardware you build on the day.
+01
+Track
+01
+Vinxa Web
+Web-based notetaker
+02
+Track
+02
+Vinxa Desktop
+Desktop app that records everything
+03
+Track
+03
+Vinxa Device
+Hardware recorder with live transcription
+04
+Track
+04
+Vinxa App
+Mobile app for the pocket
+“
+Open a tab. Start talking.
+”
+Web
+A browser app that records from the microphone or a shared meeting tab, streams live transcription, and produces shareable notes the moment the call ends. No install.
+User story
+As a team lead on back-to-back calls, I want to open a link, hit record, and get clean notes I can share before my next meeting starts.
+Must ship
+Record from microphone and from a shared browser tab
+Streaming transcript with under 2 seconds of lag
+Speaker labels and timestamps on every line
+Summary, decisions, and action items when recording stops
+Shareable read-only link to the notes
+Works on desktop Chrome and Edge
+Stretch goals
+Highlight a moment live and jump to it later
+Ask questions of past meetings ("what did we decide on pricing?")
+Multi-language transcription
+Send action items to Azure DevOps or Jira through a webhook
+Suggested stack
+MediaRecorder / Web Audio API, getDisplayMedia for tab audio
+WebSocket streaming to a speech-to-text service or a self-hosted Whisper model
+Next.js or any modern web framework
+An LLM for summaries and action items
+Showcase demo
+Run a live two-person conversation on stage. The jury watches words appear in real time, then opens the shared notes link.
+Provided on site
+Cloud credits for speech-to-text and LLM usage, sample meeting audio, and a hosted demo environment.
+Think like a product
+From a user to a working product
+01
+Pick the user
+Name one real person and one moment where they need notes. Everything else is scope creep.
+Output ·
+Persona + job-to-be-done
+02
+Write the one-page PRD
+Problem, user, must-haves, what you are not building, and how you will know it works.
+Output ·
+One-page PRD reviewed by your mentor
+03
+Build the thinnest working loop
+Capture → transcribe → notes, end to end, ugly is fine. Then make it good.
+Output ·
+First end-to-end recording
+04
+Test with real speech
+Accents, crosstalk, background noise. Measure lag and mistakes; fix the worst one.
+Output ·
+Latency and accuracy notes
+05
+Showcase
+Demo it live. The product does the talking; the slides only explain the decisions.
+Output ·
+Live demo + demo video
+The rule
+If it does not run live, it does not count.
+Slides explain decisions; they do not replace the product. Mentors sign off your one-page PRD before the build sprint, and the jury scores what actually works on demo day.
+Build as a team
+The team behind the product
+Product lead
+Owns the user, the one-page PRD, scope cuts, and the showcase story.
+App engineer
+Builds the interface people touch: web app, desktop window, or companion view.
+AI / speech engineer
+Owns transcription quality, latency, speaker labels, and summaries.
+Platform or hardware engineer
+Audio capture, storage, deployment — or the device itself on the hardware track.
+✓
+Teams of 3–5 builders; every team picks exactly one track
+✓
+Each team names a product lead before kickoff
+✓
+Device-track teams need at least one member comfortable with electronics
+✓
+Solo registrants are welcome — we match you to a team before the event
+✓
+All code is written during the build window; libraries and open-source models are allowed
+How the event runs
+Brief, build, freeze, showcase
+01
+Kickoff and product brief
+The full Vinxa Live brief, track briefs, and judging rubric are walked through on stage.
+02
+Product sprint
+Teams lock the user and write the one-page PRD. Mentors sign off before build starts.
+03
+Build sprint
+Heads-down build with mentor checkpoints. Requested device kits are handed out before this sprint starts.
+04
+Code freeze
+Repositories are frozen. Teams record a demo video and finish their showcase material.
+05
+Showcase and demo day
+Expo booths for hands-on demos, then live stage demos for the jury.
+06
+Awards
+Track winners, best overall product, and the internship shortlist are announced.
+What you ship and how it is judged
+Showcase kit and rubric
+Working product
+Runs live in front of the jury. Recorded fallbacks only if the venue network fails.
+One-page PRD
+User, problem, must-haves, non-goals, and success measures.
+Architecture diagram
+From audio capture to saved notes, including where data is stored.
+3-minute demo video
+The product in use, end to end, with one real conversation.
+Public repository
+Source code and a README that lets someone else run it.
+Privacy and consent note
+How people know they are being recorded, and how a recording is deleted.
+Judging rubric
+Working product
+30
+%
+Does it actually run, end to end, live?
+Product thinking
+20
+%
+Clear user, sharp scope, smart trade-offs.
+Transcription quality
+15
+%
+Accuracy, lag, and speaker labels in real speech.
+Experience and design
+15
+%
+Would someone use this tomorrow without help?
+Privacy and trust
+10
+%
+Consent, recording indicator, deletion, data handling.
+Showcase
+10
+%
+A demo and story that make the jury want it.
+Showcase and demo day
+Show it working, in front of everyone
+Expo
+Team booths
+Every team gets a booth. Jury, mentors, and guests try the product hands-on.
+Stage
+Live demo
+5 minutes to show the product working, then 3 minutes of jury questions.
+Gallery
+Showcase page
+Finalist demo videos and repositories are featured on the Escape Velocity page after the event.
+Awards and perks
+What is on the line
+Per track
+Best Vinxa Web, Desktop, App, and Device
+One winning team on each track.
+Overall
+Best product
+The team the jury would ship first, across all four tracks.
+Careers
+Internship shortlist
+Standout builders from any team interview for a Velloe internship.
+Everyone
+Goodies, meals, and mentorship
+Swag, food through the build, and Velloe mentors on the floor.
+Questions
+Before you register
+Do we have to build all four versions?
++
+No. Each team picks one track and builds that version of Vinxa Live properly. A great single product beats four half-built ones.
+Can we use cloud speech and LLM APIs?
++
+Yes. Document what you use in your architecture diagram. Offline or on-device transcription is a stretch goal and earns credit under transcription quality and privacy.
+We have no hardware at home. Can we pick the device track?
++
+Yes. Device kits are provided on request. Request yours when you register so it is ready before the build sprint starts. At least one teammate should be comfortable with basic electronics.
+Can I register alone?
++
+Yes. Register as a solo builder and we will match you with a team before the event.
+Can we start building before the event?
++
+You can research, learn the tools, and sketch ideas. All product code must be written during the build window.
+What about recording people without asking?
++
+Every Vinxa Live build must show a recording indicator and ask for consent before capturing. It is part of the core requirements and the judging rubric.
+How does this fit into Vinxa?
++
+Vinxa Live is the meetings layer of Vinxa, EVOCS’s enterprise intelligence platform. Your build is judged on its own, but a clear, documented way to pass notes and action items to other tools earns credit under product thinking.
+Escape Velocity 2.0 registration
+Register
+✓
+Register as an individual, or as a team of 2 to 5
+✓
+Track, college, and how you heard about Escape Velocity
+✓
+A team adds a team name
+✓
+Every person: name, email, phone, LinkedIn, t-shirt size, and source
+✓
+Resume link is optional
+✓
+Every registration is verified before confirmation
+Individual or team
+Pick a track, add the college, how you heard about Escape Velocity, and each person. A team also needs a team name.
+Register now
+Escape Velocity 2.0
+—
+funded by
+EVOCS
+, hosted by
+Velloe
+AI Innovation Center, Noida Sector 142 · 4 December 2026
+Questions →
+careers@velloe.tech
+About VELLOE
+We are an independent infrastructure intelligence company operating at the intersection of operations, AI execution, and enterprise transformation.
+Navigation
+Home
+What We Do
+Services
+Case Studies
+About
+Careers
+Hackathon
+Contact
+Capabilities
+Integrated Site Operations
+Cyber & Physical Security
+Sustainability & EHS
+Workforce & Talent Solutions
+Strategic Advisory & Transformation
+Locations
+🇦🇷
+Argentina
+🇸🇬
+Singapore
+🇮🇳
+India
+🇲🇾
+Malaysia
+🇺🇸
+United States
+Connect
+LinkedIn
+|
+Youtube
+Connect with our Expert
+© 2026 VELLOE. All rights reserved.
+Privacy Policy
+|
+Terms & Conditions
+|
+Careers
+|
+contact@velloe.tech
