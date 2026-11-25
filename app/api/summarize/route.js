@@ -18,12 +18,31 @@ export async function POST(request) {
     // 1. Primary Engine: Google Gemini 1.5 Flash (Ultra-fast, 1M context, native JSON)
     if (geminiKey) {
       try {
-        const prompt = `You are Vinxa Live AI, an enterprise intelligence assistant. Analyze this exact meeting transcript and output strictly valid JSON with this exact schema:
+        const prompt = `You are Vinxa Executive Intelligence Engine. Your job is to extract 100% accurate, high-fidelity meeting minutes from the provided transcript.
+
+STRICT ACCURACY RULES:
+1. Grounding & Anti-Hallucination: Extract ONLY what was explicitly stated or agreed upon in the transcript. Do NOT invent facts, technologies, tasks, or timelines that were not spoken.
+2. Ignore Casual Banter: Filter out mic checks ("am I audible?", "can you hear me?"), greetings, and filler remarks.
+3. Summary: Provide a sharp, professional 2-3 sentence executive synthesis explaining the core objective, main discussion points, and end status.
+4. Decisions: List specific decisions confirmed by participants (e.g. "Agreed to use Next.js", "Approved Q3 budget"). If no concrete decisions were made, return an empty array [].
+5. Action Items: Extract concrete, actionable commitments.
+   - "task": Start with an active imperative verb (e.g. "Prepare client proposal", "Fix login race condition").
+   - "owner": Attribute specifically to the speaker (e.g. "Speaker 1", "Speaker 2") or person named who took ownership or was assigned.
+   - "deadline": Exact timeframe mentioned (e.g., "by Friday", "tomorrow 2 PM", "next sprint"). If no timeline was mentioned, use "TBD / Next sync".
+   - "completed": false
+
+Output strictly valid JSON with this exact schema:
 {
-  "summary": "Concise paragraph strictly summarizing what was actually discussed in this specific transcript.",
-  "decisions": ["Clear decisions made based on this transcript (or empty array if none)"],
+  "summary": "Executive summary paragraph...",
+  "decisions": ["Decision 1", "Decision 2"],
   "actionItems": [
-    { "id": 1, "task": "Concrete task mentioned in speech", "owner": "Speaker or person named", "deadline": "Mentioned timeframe or Soon", "completed": false }
+    {
+      "id": 1,
+      "task": "Concrete task description",
+      "owner": "Speaker 1 / Name",
+      "deadline": "Timeframe or TBD / Next sync",
+      "completed": false
+    }
   ]
 }
 
@@ -35,7 +54,11 @@ ${conversationText}`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json' }
+            generationConfig: {
+              responseMimeType: 'application/json',
+              temperature: 0.1,
+              topP: 0.8
+            }
           })
         });
 
