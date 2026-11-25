@@ -1,44 +1,45 @@
 'use client';
 import Link from 'next/link';
-import { Mic, Shield, Sparkles, FolderArchive } from 'lucide-react';
+import { Sparkles, ShieldCheck, LayoutGrid, Radio } from 'lucide-react';
 
 export default function Navbar() {
   return (
-    <header className="border-b border-cyan-950/40 bg-[#0A191B]/80 backdrop-blur-md sticky top-0 z-40 px-4 lg:px-8 py-3.5">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-teal-300 flex items-center justify-center text-black font-extrabold shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
-            <Mic className="w-5 h-5 text-slate-950 stroke-[2.5]" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg tracking-tight text-white group-hover:text-cyan-300 transition-colors">
-                VINXA <span className="text-cyan-400 font-light">LIVE</span>
-              </span>
-              <span className="px-2 py-0.5 text-[11px] font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 rounded-full">
-                Web Track
-              </span>
+    <header className="sticky top-0 z-40 w-full border-b border-white/[0.06] bg-[#07080b]/80 backdrop-blur-xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Brand Logo */}
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-[1px] shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all">
+            <div className="w-full h-full bg-[#0B0D13] rounded-[11px] flex items-center justify-center">
+              <Radio className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
             </div>
-            <p className="text-[11px] text-teal-300/60 font-medium">Enterprise Meeting Intelligence</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-base tracking-tight text-white group-hover:text-slate-200 transition-colors">
+              VINXA <span className="text-indigo-400 font-normal">LIVE</span>
+            </span>
+            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+              Enterprise
+            </span>
           </div>
         </Link>
 
+        {/* Right Status & Navigation */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-cyan-950/30 border border-cyan-800/40 rounded-full text-xs text-cyan-200/80">
-            <Shield className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Consent & Privacy Guard Active</span>
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Privacy Guard Active</span>
           </div>
 
           <Link
             href="/"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-cyan-950/70 hover:bg-cyan-900/60 border border-cyan-800/50 transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all"
           >
-            <FolderArchive className="w-3.5 h-3.5 text-cyan-400" />
-            <span>All Meetings</span>
+            <LayoutGrid className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Library</span>
           </Link>
         </div>
       </div>
     </header>
   );
 }
-

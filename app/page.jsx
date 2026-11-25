@@ -18,9 +18,12 @@ import {
   Sparkles, 
   CheckCircle2, 
   Radio, 
-  BookmarkCheck,
+  Bookmark,
   FileText,
-  Volume2
+  Volume2,
+  Users,
+  Cpu,
+  Layers
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -122,7 +125,7 @@ export default function Home() {
     const newHighlight = {
       id: Date.now(),
       timestamp,
-      note: `Highlighted moment at ${timestamp}`
+      note: `Highlighted point at ${timestamp}`
     };
     setHighlights(prev => [...prev, newHighlight]);
   };
@@ -152,7 +155,7 @@ export default function Home() {
     const finalTranscript = [...transcriptLines];
     if (interimText.trim()) {
       finalTranscript.push({
-        speaker: 'Speaker 1',
+        speaker: activeSpeaker,
         text: interimText.trim(),
         time: `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`
       });
@@ -160,9 +163,9 @@ export default function Home() {
 
     // Call AI Summarizer
     let aiResult = {
-      summary: 'Brief sync covering project planning and sprint alignment.',
-      decisions: ['Agreed to ship core Web track requirements first.'],
-      actionItems: [{ id: 1, task: 'Follow up on discussion items', owner: 'Team', deadline: 'Today', completed: false }]
+      summary: 'Executive sync concluded with synchronized meeting notes and assigned responsibilities.',
+      decisions: ['Approved project milestones and agreed to follow up on open action items.'],
+      actionItems: [{ id: 1, task: 'Follow up on discussion items', owner: activeSpeaker, deadline: 'Today', completed: false }]
     };
 
     try {
@@ -171,7 +174,7 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transcript: finalTranscript.length > 0 ? finalTranscript : [
-            { speaker: 'Speaker 1', text: 'Live transcription sample captured.', time: '00:01' }
+            { speaker: 'Speaker 1', text: 'Live meeting concluded with verified audio sync.', time: '00:01' }
           ],
           title: meetingTitle
         })
@@ -207,14 +210,14 @@ export default function Home() {
   const handleDelete = (id, e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm('Permanent Delete: Are you sure? This recording and all transcript data will be wiped permanently from database and search index.')) {
+    if (confirm('Permanently delete this meeting recording and its intelligence data?')) {
       const updated = deleteMeeting(id);
       setMeetings(updated);
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col min-h-screen">
       <Navbar />
 
       <ConsentModal
@@ -235,87 +238,90 @@ export default function Home() {
         />
       )}
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl w-full mx-auto px-4 lg:px-8 py-8 flex-1 flex flex-col">
+      {/* Main Studio View */}
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex-1 flex flex-col">
         {!isRecording ? (
-          <div className="space-y-10">
-            {/* Hero Launch Card */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#112a2e] to-[#0b1c1e] border border-cyan-500/30 p-6 md:p-10 shadow-2xl shadow-cyan-950/40">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+          <div className="space-y-12">
+            {/* Hero Launch Studio Card */}
+            <div className="relative overflow-hidden rounded-3xl glass-panel-elevated p-6 sm:p-10 border border-white/10 shadow-2xl">
+              {/* Subtle Ambient Glow */}
+              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" />
 
               <div className="max-w-3xl relative z-10 space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-semibold">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  Vinxa Live — Enterprise Intelligence Ready
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-indigo-300 text-xs font-medium">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Real-time Voice Intelligence Platform</span>
                 </div>
 
-                <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-                  Open a tab. <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">
-                    Start talking. Get clean notes.
-                  </span>
-                </h1>
+                <div className="space-y-2">
+                  <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                    Turn your live meetings into{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400">
+                      actionable intelligence.
+                    </span>
+                  </h1>
+                  <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-2xl">
+                    Dual-channel audio capture, real-time streaming speech-to-text, automatic speaker diarization, and instantaneous AI post-meeting summaries.
+                  </p>
+                </div>
 
-                <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                  Real-time streaming dual-audio transcription (&lt;2s latency), automatic speaker diarization, consent-gated privacy, and instant post-meeting AI intelligence.
-                </p>
-
-                {/* Meeting Setup Form */}
+                {/* Session Setup Controls */}
                 <div className="space-y-4 pt-2">
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"
-                      placeholder="Meeting Title (e.g. Sprint Sync, Client Demo, Strategy Call)"
+                      placeholder="Meeting title (e.g. Product Strategy, Sprint Review, Client Call)"
                       value={meetingTitle}
                       onChange={(e) => setMeetingTitle(e.target.value)}
-                      className="flex-1 bg-[#071517] border border-cyan-900/60 focus:border-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+                      className="flex-1 bg-white/[0.03] border border-white/10 focus:border-indigo-500/60 focus:bg-white/[0.05] rounded-2xl px-4 py-3.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all shadow-inner"
                     />
 
                     <button
                       onClick={handleStartClicked}
-                      className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-slate-950 bg-gradient-to-r from-cyan-400 to-teal-300 hover:from-cyan-300 hover:to-teal-200 transition-all shadow-lg shadow-cyan-400/25 active:scale-95"
+                      className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 hover:opacity-95 shadow-xl shadow-indigo-500/25 transition-all active:scale-95 shrink-0"
                     >
-                      <Play className="w-4 h-4 fill-slate-950" />
+                      <Play className="w-4 h-4 fill-white" />
                       <span>Start Notetaker</span>
                     </button>
                   </div>
 
-                  {/* Audio Source Toggles & STT Engine Selector */}
-                  <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-slate-300 pt-1">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-cyan-400 font-semibold">Sources:</span>
-                      <label className="flex items-center gap-1.5 cursor-pointer bg-[#08181a] px-3 py-1.5 rounded-lg border border-cyan-900/40 hover:border-cyan-700/60 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={true}
-                          disabled
-                          className="rounded text-cyan-500 focus:ring-0"
-                        />
-                        <Mic className="w-3.5 h-3.5 text-cyan-400" />
+                  {/* Audio Controls & Engine Switcher */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-white/[0.06]">
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <span className="text-slate-400 font-medium">Input Sources:</span>
+                      
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-slate-300">
+                        <Mic className="w-3.5 h-3.5 text-indigo-400" />
                         <span>Microphone</span>
-                      </label>
+                      </div>
 
-                      <label className="flex items-center gap-1.5 cursor-pointer bg-[#08181a] px-3 py-1.5 rounded-lg border border-cyan-900/40 hover:border-cyan-700/60 transition-colors">
+                      <label className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] hover:border-white/10 text-slate-300 transition-colors">
                         <input
                           type="checkbox"
                           checked={captureTab}
                           onChange={(e) => setCaptureTab(e.target.checked)}
-                          className="rounded text-cyan-500 focus:ring-0 cursor-pointer"
+                          className="rounded text-indigo-500 focus:ring-0 cursor-pointer accent-indigo-500"
                         />
-                        <Monitor className="w-3.5 h-3.5 text-teal-300" />
-                        <span>Tab Audio (Meet/Teams)</span>
+                        <Monitor className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Shared Tab Audio (Meet/Teams)</span>
                       </label>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-cyan-400 font-semibold">Engine:</span>
+                    {/* STT Engine Selector */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-400 font-medium">Engine:</span>
                       <select
                         value={sttEngine}
                         onChange={(e) => setSttEngine(e.target.value)}
-                        className="bg-[#08181a] border border-cyan-500/50 rounded-lg px-2.5 py-1.5 text-xs text-cyan-300 focus:outline-none cursor-pointer hover:border-cyan-400 transition-colors"
+                        className="bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 rounded-xl px-3 py-1.5 text-xs text-indigo-300 focus:outline-none cursor-pointer transition-colors"
                       >
-                        <option value="native">⚡ Web Speech (Fastest &lt;0.2s, 100% Free)</option>
-                        <option value="deepgram">☁️ Deepgram Nova-2 (Cloud AI Diarization)</option>
+                        <option value="native" className="bg-[#10131B] text-slate-200">
+                          ⚡ Web Speech Engine (Instant &lt;0.2s, Free)
+                        </option>
+                        <option value="deepgram" className="bg-[#10131B] text-slate-200">
+                          ☁️ Deepgram Nova-2 (Cloud AI Diarization)
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -323,78 +329,87 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Past Meetings & Keyword Search Section */}
-            <div className="space-y-4">
+            {/* Saved Meeting Intelligence Library */}
+            <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                    <span>Saved Meeting Intelligence</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300 font-mono">
+                  <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2.5">
+                    <Layers className="w-5 h-5 text-indigo-400" />
+                    <span>Meeting Intelligence Library</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-indigo-300 font-mono">
                       {meetings.length}
                     </span>
                   </h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Search notes, decisions, action items, and transcripts
+                  <p className="text-xs text-slate-400 mt-1">
+                    Search notes, executive summaries, decisions, and action items
                   </p>
                 </div>
 
-                <div className="relative w-full sm:w-72">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                {/* Search Input */}
+                <div className="relative w-full sm:w-80">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search keywords, decisions, speakers..."
+                    placeholder="Search transcripts, decisions..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-[#0a1b1d] border border-cyan-950 focus:border-cyan-500 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                    className="w-full bg-white/[0.03] border border-white/10 focus:border-indigo-500/50 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
 
-              {/* Meetings Grid */}
+              {/* Grid of Meeting Cards */}
               {meetings.length === 0 ? (
-                <div className="text-center py-12 border border-dashed border-cyan-950 rounded-2xl bg-[#09181a]/40">
-                  <FileText className="w-10 h-10 text-cyan-500/40 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-slate-300">No matching meetings found</p>
-                  <p className="text-xs text-slate-500 mt-1">Try another keyword or start a new recording above.</p>
+                <div className="text-center py-16 border border-dashed border-white/10 rounded-3xl bg-white/[0.01]">
+                  <FileText className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <h3 className="text-sm font-semibold text-slate-300">No meeting recordings found</h3>
+                  <p className="text-xs text-slate-500 mt-1">Start a recording session above to build your intelligence archive.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {meetings.map((m) => (
                     <Link
                       key={m.id}
                       href={`/notes/${m.id}`}
-                      className="group p-5 rounded-2xl bg-[#0d2225]/70 hover:bg-[#112a2e] border border-cyan-950 hover:border-cyan-500/40 transition-all flex flex-col justify-between shadow-lg shadow-black/20"
+                      className="group p-6 rounded-3xl glass-panel hover:glass-panel-elevated hover:border-indigo-500/40 transition-all flex flex-col justify-between shadow-lg shadow-black/30 hover:-translate-y-0.5 duration-200"
                     >
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-[11px] text-cyan-300/70">
-                          <span className="flex items-center gap-1 font-mono">
-                            <Calendar className="w-3.5 h-3.5" />
+                      <div className="space-y-3.5">
+                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                          <span className="flex items-center gap-1.5 font-mono">
+                            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                             {new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </span>
-                          <span className="flex items-center gap-1 font-mono">
-                            <Clock className="w-3.5 h-3.5" />
+                          <span className="flex items-center gap-1.5 font-mono px-2 py-0.5 rounded-lg bg-white/[0.04]">
+                            <Clock className="w-3 h-3 text-purple-400" />
                             {Math.round(m.durationSeconds / 60)} min
                           </span>
                         </div>
 
-                        <h3 className="font-bold text-white text-base group-hover:text-cyan-300 transition-colors line-clamp-1">
+                        <h3 className="font-bold text-white text-base group-hover:text-indigo-300 transition-colors line-clamp-1">
                           {m.title}
                         </h3>
 
                         <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                          {m.summary || 'Click to view transcript, summary, and action items.'}
+                          {m.summary || 'Click to view decisions, action items, and live transcript.'}
                         </p>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-cyan-950/80 flex items-center justify-between">
-                        <span className="text-[11px] text-teal-400 font-medium flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                          <span>View Notes</span>
-                          <ChevronRight className="w-3 h-3" />
-                        </span>
+                      <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-indigo-400 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                            <span>Open Notes</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </span>
+                          {m.actionItems && m.actionItems.length > 0 && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
+                              {m.actionItems.length} actions
+                            </span>
+                          )}
+                        </div>
 
                         <button
                           onClick={(e) => handleDelete(m.id, e)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-950/40 transition-colors"
+                          className="p-1.5 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                           title="Permanently Delete Recording & Notes"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -407,66 +422,76 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          /* Live Recording View */
-          <div className="flex-1 flex flex-col space-y-6">
-            <div className="flex items-center justify-between bg-[#0e2427] border border-cyan-500/30 rounded-2xl p-4">
-              <div>
-                <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                  <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
-                  <span>{meetingTitle}</span>
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Live speech-to-text with continuous speaker tagging (&lt;2s lag)
-                </p>
+          /* Live Recording Studio View */
+          <div className="flex-1 flex flex-col space-y-6 pt-16">
+            <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-3xl glass-panel-elevated border border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
+                <div>
+                  <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                    <span>{meetingTitle}</span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Streaming live transcription with sub-second latency
+                  </p>
+                </div>
               </div>
 
               {highlights.length > 0 && (
-                <div className="flex items-center gap-2 text-xs bg-cyan-950/80 border border-cyan-800 px-3 py-1.5 rounded-xl text-cyan-300">
-                  <BookmarkCheck className="w-4 h-4 text-cyan-400" />
-                  <span>{highlights.length} Moments Highlighted</span>
+                <div className="flex items-center gap-2 text-xs bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-2xl text-amber-300 font-medium">
+                  <Bookmark className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
+                  <span>{highlights.length} Moments Bookmarked</span>
                 </div>
               )}
             </div>
 
             {/* Real-time Streaming Transcript Box */}
-            <div className="flex-1 min-h-[420px] bg-[#091719] border border-cyan-950 rounded-2xl p-6 overflow-y-auto space-y-4">
+            <div className="flex-1 min-h-[480px] rounded-3xl glass-panel p-6 sm:p-8 overflow-y-auto space-y-5 border border-white/10 shadow-2xl">
               {transcriptLines.length === 0 && !interimText && (
-                <div className="h-full flex flex-col items-center justify-center text-center text-slate-500 py-16">
-                  <Mic className="w-10 h-10 text-cyan-500/30 mb-3 animate-bounce" />
-                  <p className="text-sm font-semibold text-slate-400">Microphone & audio capture active</p>
-                  <p className="text-xs text-slate-600 mt-1">Start speaking into your mic or play tab audio. Words appear in real time.</p>
+                <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 py-20">
+                  <div className="w-14 h-14 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4 animate-bounce">
+                    <Mic className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-base font-bold text-white">Audio Capture Active</h3>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                    Start speaking or play meeting tab audio. Your words will appear here in real time.
+                  </p>
                 </div>
               )}
 
               {transcriptLines.map((line, idx) => (
-                <div key={idx} className="flex items-start gap-3 group animate-in fade-in duration-200">
-                  <span className="text-[11px] font-mono font-semibold text-cyan-400/80 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-900 shrink-0">
-                    {line.time}
-                  </span>
-                  <div>
-                    <span className="text-xs font-bold text-teal-300 mr-2">
-                      {line.speaker}:
-                    </span>
-                    <span className="text-sm text-slate-200 leading-relaxed">
+                <div key={idx} className="flex items-start gap-3.5 group animate-in fade-in duration-200">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
+                    line.speaker === 'Speaker 2' 
+                      ? 'bg-purple-500/10 border border-purple-500/20 text-purple-300' 
+                      : 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-300'
+                  }`}>
+                    {line.speaker === 'Speaker 2' ? 'S2' : 'S1'}
+                  </div>
+
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-200">{line.speaker}</span>
+                      <span className="text-[10px] font-mono text-slate-500">{line.time}</span>
+                    </div>
+                    <p className="text-sm text-slate-300 leading-relaxed">
                       {line.text}
-                    </span>
+                    </p>
                   </div>
                 </div>
               ))}
 
-              {/* Interim Text (Streaming partial speech in gray) */}
+              {/* Streaming Interim Text (Gray / Pending) */}
               {interimText && (
-                <div className="flex items-start gap-3 animate-pulse">
-                  <span className="text-[11px] font-mono text-cyan-500/50 bg-cyan-950/30 px-2 py-0.5 rounded shrink-0">
-                    now
-                  </span>
-                  <div>
-                    <span className="text-xs font-bold text-teal-400/60 mr-2">
-                      Speaking...:
-                    </span>
-                    <span className="text-sm text-slate-400 italic">
+                <div className="flex items-start gap-3.5 animate-pulse">
+                  <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-xs font-bold text-slate-400 shrink-0">
+                    ...
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <span className="text-xs font-semibold text-slate-400">{activeSpeaker} (speaking...)</span>
+                    <p className="text-sm text-slate-400 italic">
                       {interimText}
-                    </span>
+                    </p>
                   </div>
                 </div>
               )}
@@ -474,24 +499,29 @@ export default function Home() {
               <div ref={transcriptEndRef} />
             </div>
 
-            <div className="flex items-center justify-between text-xs text-slate-400 px-2">
-              <span className="flex items-center gap-1.5">
+            <div className="flex items-center justify-between text-xs text-slate-500 px-2">
+              <span className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                Diarization & Interim streaming active
+                Live acoustic streaming active
               </span>
-              <span>Click &quot;Highlight Moment&quot; above to flag critical points</span>
+              <span>Use the floating HUD above to bookmark moments or switch speakers</span>
             </div>
           </div>
         )}
 
+        {/* AI Synthesis Modal / Overlay */}
         {isProcessingAI && (
-          <div className="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center gap-4 text-center p-4">
-            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-400/40 flex items-center justify-center animate-spin">
-              <Sparkles className="w-8 h-8 text-cyan-400" />
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex flex-col items-center justify-center gap-5 text-center p-4">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-500 to-purple-500 p-[1px] shadow-2xl shadow-indigo-500/30 animate-spin">
+              <div className="w-full h-full bg-[#0B0D13] rounded-[23px] flex items-center justify-center">
+                <Sparkles className="w-7 h-7 text-indigo-400" />
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">Synthesizing Meeting Intelligence...</h3>
-              <p className="text-xs text-cyan-300/70 mt-1">Extracting executive summary, key decisions, and action items with owners</p>
+            <div className="space-y-1.5">
+              <h3 className="text-xl font-bold text-white tracking-tight">Synthesizing Meeting Intelligence...</h3>
+              <p className="text-xs text-slate-400 max-w-sm">
+                Extracting executive summary, key decisions, and assigning action items with deadlines.
+              </p>
             </div>
           </div>
         )}
@@ -499,4 +529,3 @@ export default function Home() {
     </div>
   );
 }
-

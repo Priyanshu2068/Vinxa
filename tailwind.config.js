@@ -6,25 +6,41 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        vinxa: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          900: '#134e4a',
-          teal: '#07D2E0',
-          dark: '#0A191B',
-          surface: '#112528',
-          card: '#162F33',
+        dark: {
+          950: '#07080B',
+          900: '#0B0D13',
+          850: '#10131B',
+          800: '#161A24',
+          700: '#232938',
+          600: '#323B4E',
+        },
+        brand: {
+          primary: '#6366F1',
+          hover: '#4F46E5',
+          light: '#818CF8',
+          accent: '#A855F7',
+          glow: 'rgba(99, 102, 241, 0.25)',
+        }
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+      },
+      animation: {
+        'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'soundwave': 'soundwave 1.2s ease-in-out infinite',
+      },
+      keyframes: {
+        soundwave: {
+          '0%, 100%': { height: '4px' },
+          '50%': { height: '16px' },
         }
       }
     },
   },
   plugins: [],
 }
-

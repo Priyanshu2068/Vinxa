@@ -1,5 +1,5 @@
 'use client';
-import { Bookmark, Square, Volume2, Users } from 'lucide-react';
+import { Bookmark, Square, Volume2, Users, Radio } from 'lucide-react';
 
 export default function RecordingBanner({
   durationSeconds,
@@ -17,73 +17,68 @@ export default function RecordingBanner({
   };
 
   return (
-    <div className="sticky top-[61px] z-30 bg-red-950/70 border-b border-red-500/40 backdrop-blur-md px-4 py-3 shadow-lg shadow-red-950/30">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-        {/* Left: Blinking Red Indicator & Timer */}
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-4xl px-4 animate-in fade-in slide-in-from-top-4 duration-300">
+      <div className="glass-panel-elevated rounded-2xl p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-3 shadow-2xl shadow-black/60 border border-white/10">
+        {/* Left: Recording Status & Timer */}
         <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center">
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 animate-ping absolute opacity-75" />
-            <span className="w-3.5 h-3.5 rounded-full bg-red-500 relative shadow-md shadow-red-500" />
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold font-mono tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+            <span>REC</span>
+            <span className="text-white ml-1">{formatTime(durationSeconds)}</span>
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black tracking-wider uppercase text-red-300">
-                LIVE RECORDING ACTIVE
-              </span>
-              <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-red-900/60 text-white border border-red-700/50">
-                {formatTime(durationSeconds)}
-              </span>
-            </div>
-            <p className="text-[10px] text-red-200/60 mt-0.5">
-              Audio Sources: {sources.join(' + ')}
-            </p>
+          {/* Soundwave bars animated with audio level */}
+          <div className="hidden sm:flex items-center gap-1 h-5 px-2">
+            {[40, 75, 55, 90, 60, 45, 80].map((h, i) => {
+              const activeHeight = Math.max(4, Math.round((h * (audioLevel || 20)) / 100));
+              return (
+                <span
+                  key={i}
+                  className="w-1 bg-gradient-to-t from-indigo-500 to-purple-400 rounded-full transition-all duration-75"
+                  style={{ height: `${activeHeight}px` }}
+                />
+              );
+            })}
           </div>
         </div>
 
-        {/* Center: Live Audio Level Bar */}
-        <div className="hidden md:flex items-center gap-2 bg-red-950/40 px-3 py-1.5 rounded-lg border border-red-800/30">
-          <Volume2 className="w-3.5 h-3.5 text-red-300" />
-          <div className="w-24 h-2 bg-red-950 rounded-full overflow-hidden border border-red-900">
-            <div
-              className="h-full bg-gradient-to-r from-teal-400 to-red-400 transition-all duration-75"
-              style={{ width: `${Math.max(8, audioLevel)}%` }}
-            />
-          </div>
-          <span className="text-[10px] font-mono text-red-300/80">{audioLevel}%</span>
-        </div>
-
-        {/* Right: Actions (Speaker Switch, Highlight moment & Stop) */}
-        <div className="flex items-center gap-2.5">
-          {/* Manual Speaker Switch Toggle */}
+        {/* Center: Audio Source & Active Speaker Selector */}
+        <div className="flex items-center gap-2">
           <button
             onClick={onToggleSpeaker}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-950 hover:bg-teal-900 text-teal-300 border border-teal-500/50 transition-colors shadow-sm"
-            title="Click to toggle between Speaker 1 and Speaker 2"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/[0.08] hover:border-indigo-500/40 transition-all group"
+            title="Click to toggle speaking turn"
           >
-            <Users className="w-3.5 h-3.5 text-teal-400" />
-            <span>{currentSpeaker} <span className="font-normal opacity-75">(Switch)</span></span>
+            <Users className="w-3.5 h-3.5 text-indigo-400 group-hover:scale-110 transition-transform" />
+            <span>{currentSpeaker}</span>
+            <span className="text-[10px] text-slate-500 ml-0.5">(Switch)</span>
           </button>
 
+          <span className="hidden md:inline-flex items-center px-2.5 py-1 rounded-xl text-[11px] font-medium bg-white/[0.03] text-slate-400 border border-white/[0.06]">
+            {sources.join(' + ')}
+          </span>
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2">
           <button
             onClick={onAddHighlight}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-600/40 transition-colors shadow-sm"
-            title="Mark this key moment in the transcript"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all"
+            title="Bookmark important moment with timestamp"
           >
-            <Bookmark className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400/20" />
-            <span>Highlight</span>
+            <Bookmark className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
+            <span className="hidden xs:inline">Bookmark</span>
           </button>
 
           <button
             onClick={onStop}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold bg-red-600 hover:bg-red-500 text-white shadow-md shadow-red-600/40 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-lg shadow-red-600/30 transition-all active:scale-95"
           >
             <Square className="w-3.5 h-3.5 fill-white" />
-            <span>End Meeting</span>
+            <span>Finish Call</span>
           </button>
         </div>
       </div>
     </div>
   );
 }
-

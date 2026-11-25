@@ -1,14 +1,14 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Vinxa Live — AI Meeting Notetaker & Enterprise Intelligence',
-  description: 'Real-time dual-audio speech transcription, speaker diarization, AI summaries and action items for teams.',
+  title: 'Vinxa Live — AI Meeting Intelligence & Real-time Notetaker',
+  description: 'Ultra-fast speech transcription, speaker diarization, executive summaries, and action items for high-performance teams.',
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-[#081315] text-[#E6F1F2] antialiased selection:bg-[#07D2E0]/30 selection:text-[#07D2E0]">
+      <body className="bg-[#07080b] text-slate-100 antialiased selection:bg-indigo-500/30 selection:text-indigo-300">
         <div className="min-h-screen flex flex-col">
           {children}
         </div>
@@ -16,4 +16,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-
