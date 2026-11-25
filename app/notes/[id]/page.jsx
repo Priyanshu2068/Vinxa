@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Navbar from '../../../components/Navbar';
 import { getMeetingById, saveMeeting, deleteMeeting } from '../../../lib/storage';
@@ -44,6 +44,29 @@ export default function MeetingDetailsPage() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   const transcriptContainerRef = useRef(null);
+
+  // Intelligently group shattered utterances into smooth, continuous speaker blocks
+  const coalescedTranscript = useMemo(() => {
+    const raw = meeting?.transcript || [];
+    const merged = [];
+    for (const item of raw) {
+      const text = (item.text || '').trim();
+      if (!text) continue;
+      const speaker = item.speaker || 'Speaker 1';
+      const last = merged[merged.length - 1];
+      if (last && last.speaker === speaker) {
+        last.text = `${last.text} ${text}`;
+      } else {
+        merged.push({
+          ...item,
+          speaker,
+          text,
+          time: item.time || '00:00'
+        });
+      }
+    }
+    return merged;
+  }, [meeting?.transcript]);
 
   useEffect(() => {
     if (meetingId) {
@@ -494,11 +517,11 @@ ${(meeting.transcript || []).map(t => `**[${t.time}] ${t.speaker}:** ${t.text}`)
           <div ref={transcriptContainerRef} className="p-6 sm:p-8 rounded-3xl glass-panel space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-white/[0.08] text-xs text-slate-400">
               <span className="font-semibold text-slate-200">Acoustic Speaker Diarization &amp; Timeline</span>
-              <span className="font-mono">{meeting.transcript?.length || 0} transcript segments</span>
+              <span className="font-mono">{coalescedTranscript.length} speaker turns</span>
             </div>
 
             <div className="space-y-4">
-              {(meeting.transcript || []).map((t, idx) => (
+              {coalescedTranscript.map((t, idx) => (
                 <div
                   key={idx}
                   id={`line-${t.time}`}

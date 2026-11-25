@@ -88,12 +88,41 @@ export default function Home() {
 
     try {
       const engine = new VinxaAudioEngine(
-        // Transcript Update
+        // Transcript Update with Speaker Turn Coalescing
         ({ text, isFinal, speaker, timestamp }) => {
+          const currentSpeaker = speaker || activeSpeaker || 'Speaker 1';
           if (speaker) setActiveSpeaker(speaker);
           const timeStr = `${new Date().getMinutes().toString().padStart(2, '0')}:${new Date().getSeconds().toString().padStart(2, '0')}`;
+          
           if (isFinal) {
-            setTranscriptLines(prev => [...prev, { speaker, text, time: timeStr }]);
+            const cleanNew = text.trim();
+            if (!cleanNew) return;
+
+            setTranscriptLines(prev => {
+              if (prev.length === 0) {
+                return [{ speaker: currentSpeaker, text: cleanNew, time: timeStr, lastUpdated: Date.now() }];
+              }
+              const last = prev[prev.length - 1];
+              const timeDiffSec = (Date.now() - (last.lastUpdated || 0)) / 1000;
+              
+              // If same speaker and continuous thought within 8s, coalesce into a single flowing statement
+              if (last.speaker === currentSpeaker && timeDiffSec < 8) {
+                const updated = [...prev];
+                // Prevent duplicate word boundary
+                if (last.text.endsWith(cleanNew)) {
+                  return updated;
+                }
+                updated[updated.length - 1] = {
+                  ...last,
+                  text: `${last.text.trim()} ${cleanNew}`,
+                  lastUpdated: Date.now()
+                };
+                return updated;
+              }
+
+              // Different speaker or natural pause -> start clean new speaker turn
+              return [...prev, { speaker: currentSpeaker, text: cleanNew, time: timeStr, lastUpdated: Date.now() }];
+            });
             setInterimText('');
           } else {
             setInterimText(text);
@@ -154,11 +183,19 @@ export default function Home() {
 
     const finalTranscript = [...transcriptLines];
     if (interimText.trim()) {
-      finalTranscript.push({
-        speaker: activeSpeaker,
-        text: interimText.trim(),
-        time: `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`
-      });
+      const cleanInterim = interimText.trim();
+      const lastLine = finalTranscript[finalTranscript.length - 1];
+      if (lastLine && lastLine.speaker === activeSpeaker) {
+        if (!lastLine.text.includes(cleanInterim)) {
+          lastLine.text = `${lastLine.text.trim()} ${cleanInterim}`;
+        }
+      } else {
+        finalTranscript.push({
+          speaker: activeSpeaker,
+          text: cleanInterim,
+          time: `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`
+        });
+      }
     }
 
     // Call AI Summarizer

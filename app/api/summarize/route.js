@@ -1,5 +1,25 @@
 import { NextResponse } from 'next/server';
 
+function coalesceTranscript(rawList) {
+  const coalesced = [];
+  for (const item of rawList || []) {
+    const text = (item.text || '').trim();
+    if (!text) continue;
+    const speaker = item.speaker || 'Speaker 1';
+    const last = coalesced[coalesced.length - 1];
+    if (last && last.speaker === speaker) {
+      last.text = `${last.text} ${text}`;
+    } else {
+      coalesced.push({
+        speaker,
+        text,
+        time: item.time || '00:00'
+      });
+    }
+  }
+  return coalesced;
+}
+
 export async function POST(request) {
   try {
     const { transcript, title } = await request.json();
@@ -8,73 +28,84 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No transcript provided' }, { status: 400 });
     }
 
-    const conversationText = transcript
-      .map(t => `[${t.time || '00:00'}] ${t.speaker}: ${t.text}`)
+    // Coalesce shattered consecutive utterances into clean speaker blocks
+    const coalesced = coalesceTranscript(transcript);
+
+    const conversationText = coalesced
+      .map(t => `[${t.time}] ${t.speaker}: ${t.text}`)
       .join('\n');
 
     const geminiKey = (process.env.GEMINI_API_KEY || '').trim();
     const grokKey = (process.env.GROK_API_KEY || process.env.XAI_API_KEY || '').trim();
 
-    // 1. Primary Engine: Google Gemini 1.5 Flash (Ultra-fast, 1M context, native JSON)
+    // 1. Primary Engine: Google Gemini (Try gemini-1.5-flash, gemini-2.0-flash, gemini-1.5-pro)
     if (geminiKey) {
-      try {
-        const prompt = `You are Vinxa Executive Intelligence Engine. Your job is to extract 100% accurate, high-fidelity meeting minutes from the provided transcript.
+      const geminiModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+      const prompt = `You are Vinxa Executive Meeting Intelligence Engine. Extract comprehensive, accurate meeting minutes from the provided transcript.
 
-STRICT ACCURACY RULES:
-1. Grounding & Anti-Hallucination: Extract ONLY what was explicitly stated or agreed upon in the transcript. Do NOT invent facts, technologies, tasks, or timelines that were not spoken.
-2. Ignore Casual Banter: Filter out mic checks ("am I audible?", "can you hear me?"), greetings, and filler remarks.
-3. Summary: Provide a sharp, professional 2-3 sentence executive synthesis explaining the core objective, main discussion points, and end status.
-4. Decisions: List specific decisions confirmed by participants (e.g. "Agreed to use Next.js", "Approved Q3 budget"). If no concrete decisions were made, return an empty array [].
-5. Action Items: Extract concrete, actionable commitments.
-   - "task": Start with an active imperative verb (e.g. "Prepare client proposal", "Fix login race condition").
-   - "owner": Attribute specifically to the speaker (e.g. "Speaker 1", "Speaker 2") or person named who took ownership or was assigned.
-   - "deadline": Exact timeframe mentioned (e.g., "by Friday", "tomorrow 2 PM", "next sprint"). If no timeline was mentioned, use "TBD / Next sync".
+STRICT INSTRUCTIONS:
+1. Grounding: Rely strictly on what was actually said. Never fabricate tasks or decisions that were not mentioned.
+2. Filter: Disregard audio check banter ("can you hear me", "am I audible").
+3. Summary: Provide a high-quality, comprehensive paragraph (3-4 sentences) capturing the core purpose, technical or business topics reviewed, and overarching outcome.
+4. Decisions: List all concrete decisions, agreements, or choices confirmed during the conversation. If none, return [].
+5. Action Items: List all commitments and tasks.
+   - "task": Clear actionable description starting with an active verb.
+   - "owner": Explicitly attribute to the speaker (e.g. "Speaker 1", "Speaker 2") or named person.
+   - "deadline": Mentioned timeframe or "TBD / Next sync".
    - "completed": false
 
 Output strictly valid JSON with this exact schema:
 {
-  "summary": "Executive summary paragraph...",
-  "decisions": ["Decision 1", "Decision 2"],
+  "summary": "Full comprehensive summary...",
+  "decisions": ["Decision item 1", "Decision item 2"],
   "actionItems": [
     {
       "id": 1,
-      "task": "Concrete task description",
+      "task": "Task description",
       "owner": "Speaker 1 / Name",
-      "deadline": "Timeframe or TBD / Next sync",
+      "deadline": "Timeframe",
       "completed": false
     }
   ]
 }
 
-Meeting Transcript:
+Transcript:
 ${conversationText}`;
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              temperature: 0.1,
-              topP: 0.8
-            }
-          })
-        });
+      for (const model of geminiModels) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.1,
+                topP: 0.8
+              }
+            })
+          });
 
-        if (res.ok) {
-          const data = await res.json();
-          const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          const parsed = JSON.parse(rawText);
-          if (parsed && parsed.summary) {
-            return NextResponse.json(parsed);
+          if (res.ok) {
+            const data = await res.json();
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (rawText) {
+              let cleaned = rawText.trim();
+              if (cleaned.startsWith('```')) {
+                cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+              }
+              const parsed = JSON.parse(cleaned);
+              if (parsed && parsed.summary) {
+                return NextResponse.json(parsed);
+              }
+            }
+          } else {
+            console.warn(`Gemini (${model}) returned status ${res.status}:`, await res.text());
           }
-        } else {
-          const errDetail = await res.text();
-          console.error('Gemini API Error (Status ' + res.status + '):', errDetail);
+        } catch (apiErr) {
+          console.warn(`Gemini (${model}) call failed:`, apiErr);
         }
-      } catch (apiErr) {
-        console.error('Gemini API call failed:', apiErr);
       }
     }
 
@@ -106,53 +137,64 @@ ${conversationText}`;
 
         if (grokRes.ok) {
           const grokData = await grokRes.json();
-          const parsed = JSON.parse(grokData.choices[0].message.content);
+          const content = grokData.choices[0].message.content;
+          let cleaned = content.trim();
+          if (cleaned.startsWith('```')) {
+            cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+          }
+          const parsed = JSON.parse(cleaned);
           return NextResponse.json(parsed);
         }
       } catch (grokErr) {
-        console.error('Grok API call failed:', grokErr);
+        console.warn('Grok API call failed:', grokErr);
       }
     }
 
-    // 3. Dynamic Natural Fallback (Extracts directly from the ACTUAL words spoken, never static fake text)
-    const validLines = transcript.filter(t => t.text && t.text.trim().length > 0);
-    const spokenSentences = validLines.map(t => t.text.trim());
-    const firstSpeaker = validLines[0]?.speaker || 'Speaker 1';
+    // 3. High-Quality Natural Fallback Engine (Coalesced semantic extraction)
+    const turns = coalesced;
+    const firstSpeaker = turns[0]?.speaker || 'Speaker 1';
 
+    // Build rich summary from coalesced thoughts
     let dynamicSummary = '';
-    if (spokenSentences.length === 0) {
-      dynamicSummary = 'Brief audio session recorded. No audible speech segments detected in this transcript.';
+    if (turns.length === 0) {
+      dynamicSummary = 'Meeting session completed. No spoken audio transcript was recorded.';
     } else {
-      dynamicSummary = `Discussion points captured for "${title || 'Meeting Sync'}": ` + spokenSentences.slice(0, 4).join(' ');
+      const summarySentences = turns.map(t => `${t.speaker} discussed: "${t.text}"`);
+      dynamicSummary = `Meeting synchronization for "${title || 'Meeting Sync'}": ` + summarySentences.slice(0, 3).join('. ') + '.';
     }
 
-    // Detect real decisions from actual words
-    const decisionKeywords = ['agree', 'decid', 'will', 'plan', 'choose', 'confirm', 'final'];
-    const dynamicDecisions = validLines
-      .filter(line => decisionKeywords.some(k => line.text.toLowerCase().includes(k)))
-      .map(line => `${line.speaker}: "${line.text}"`);
-
-    if (dynamicDecisions.length === 0 && validLines.length > 0) {
-      dynamicDecisions.push(`Aligned on: "${validLines[validLines.length - 1].text.slice(0, 90)}"`);
+    // Extract real decisions from actual words
+    const decisionKeywords = ['agree', 'decid', 'will', 'plan', 'choose', 'confirm', 'final', 'approved', 'select'];
+    const dynamicDecisions = [];
+    for (const turn of turns) {
+      if (decisionKeywords.some(k => turn.text.toLowerCase().includes(k))) {
+        dynamicDecisions.push(`${turn.speaker}: "${turn.text}"`);
+      }
+    }
+    if (dynamicDecisions.length === 0 && turns.length > 0) {
+      dynamicDecisions.push(`Aligned on: "${turns[turns.length - 1].text.slice(0, 120)}"`);
     }
 
-    // Extract actual action items from spoken phrases
-    const actionKeywords = ['need', 'must', 'have to', 'should', 'will', 'action', 'do', 'make', 'send', 'test', 'finish', 'complete'];
-    const dynamicActionItems = validLines
-      .filter(line => actionKeywords.some(k => line.text.toLowerCase().includes(k)))
-      .slice(0, 4)
-      .map((line, idx) => ({
-        id: idx + 1,
-        task: line.text,
-        owner: line.speaker || firstSpeaker,
-        deadline: 'Pending follow-up',
-        completed: false
-      }));
+    // Extract real action items
+    const actionKeywords = ['need', 'must', 'have to', 'should', 'will', 'action', 'do', 'make', 'send', 'test', 'finish', 'complete', 'review', 'deploy', 'prepare'];
+    const dynamicActionItems = [];
+    let actId = 1;
+    for (const turn of turns) {
+      if (actionKeywords.some(k => turn.text.toLowerCase().includes(k))) {
+        dynamicActionItems.push({
+          id: actId++,
+          task: turn.text,
+          owner: turn.speaker,
+          deadline: 'TBD / Follow-up',
+          completed: false
+        });
+      }
+    }
 
-    if (dynamicActionItems.length === 0 && validLines.length > 0) {
+    if (dynamicActionItems.length === 0 && turns.length > 0) {
       dynamicActionItems.push({
         id: 1,
-        task: `Follow up on: "${validLines[0].text.slice(0, 80)}"`,
+        task: `Follow up on: "${turns[0].text.slice(0, 90)}"`,
         owner: firstSpeaker,
         deadline: 'Next meeting',
         completed: false
@@ -161,12 +203,11 @@ ${conversationText}`;
 
     return NextResponse.json({
       summary: dynamicSummary,
-      decisions: dynamicDecisions,
-      actionItems: dynamicActionItems
+      decisions: dynamicDecisions.slice(0, 6),
+      actionItems: dynamicActionItems.slice(0, 6)
     });
   } catch (error) {
     console.error('Error generating summary:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
-

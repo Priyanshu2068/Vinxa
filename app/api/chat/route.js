@@ -1,5 +1,25 @@
 import { NextResponse } from 'next/server';
 
+function coalesceTranscript(rawList) {
+  const coalesced = [];
+  for (const item of rawList || []) {
+    const text = (item.text || '').trim();
+    if (!text) continue;
+    const speaker = item.speaker || 'Speaker 1';
+    const last = coalesced[coalesced.length - 1];
+    if (last && last.speaker === speaker) {
+      last.text = `${last.text} ${text}`;
+    } else {
+      coalesced.push({
+        speaker,
+        text,
+        time: item.time || '00:00'
+      });
+    }
+  }
+  return coalesced;
+}
+
 export async function POST(request) {
   try {
     const { question, transcript, summary, decisions, actionItems } = await request.json();
@@ -7,6 +27,8 @@ export async function POST(request) {
     if (!question) {
       return NextResponse.json({ error: 'Question is required' }, { status: 400 });
     }
+
+    const cleanTranscript = coalesceTranscript(transcript);
 
     const contextText = `
 Meeting Summary:
@@ -19,7 +41,7 @@ Action Items:
 ${(actionItems || []).map(a => `- ${a.task} (Owner: ${a.owner}, Deadline: ${a.deadline})`).join('\n')}
 
 Full Transcript:
-${(transcript || []).map(t => `[${t.time}] ${t.speaker}: ${t.text}`).join('\n')}
+${cleanTranscript.map(t => `[${t.time}] ${t.speaker}: ${t.text}`).join('\n')}
 `;
 
     const geminiKey = process.env.GEMINI_API_KEY;

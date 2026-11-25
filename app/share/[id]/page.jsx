@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { getMeetingById, saveMeeting } from '../../../lib/storage';
 import { Calendar, Clock, Sparkles, CheckCircle2, ListTodo, ShieldCheck } from 'lucide-react';
@@ -10,6 +10,23 @@ export default function ShareableNotesPage() {
   const meetingId = params.id;
   const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const coalescedTranscript = useMemo(() => {
+    const raw = meeting?.transcript || [];
+    const merged = [];
+    for (const item of raw) {
+      const text = (item.text || '').trim();
+      if (!text) continue;
+      const speaker = item.speaker || 'Speaker 1';
+      const last = merged[merged.length - 1];
+      if (last && last.speaker === speaker) {
+        last.text = `${last.text} ${text}`;
+      } else {
+        merged.push({ ...item, text, speaker });
+      }
+    }
+    return merged;
+  }, [meeting?.transcript]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -170,18 +187,21 @@ export default function ShareableNotesPage() {
 
         {/* Diarized Transcript */}
         <section className="p-6 sm:p-8 rounded-3xl glass-panel space-y-4">
-          <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Full Diarized Transcript</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Full Diarized Transcript</h2>
+            <span className="text-xs font-mono text-slate-500">{coalescedTranscript.length} speaker turns</span>
+          </div>
           <div className="space-y-3.5">
-            {(meeting.transcript || []).map((t, idx) => (
-              <div key={idx} className="flex items-start gap-3 text-sm p-2 rounded-xl hover:bg-white/[0.02]">
+            {coalescedTranscript.map((t, idx) => (
+              <div key={idx} className="flex items-start gap-3 text-sm p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
                 <span className="text-[11px] font-mono text-slate-400 bg-white/[0.04] px-2 py-0.5 rounded-md shrink-0">
                   {t.time}
                 </span>
-                <div>
+                <div className="space-y-0.5">
                   <span className={`font-bold mr-2 text-xs ${t.speaker === 'Speaker 2' ? 'text-purple-300' : 'text-indigo-300'}`}>
                     {t.speaker}:
                   </span>
-                  <span className="text-slate-300 leading-relaxed">{t.text}</span>
+                  <span className="text-slate-200 leading-relaxed">{t.text}</span>
                 </div>
               </div>
             ))}
