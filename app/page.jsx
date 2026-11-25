@@ -49,6 +49,7 @@ export default function Home() {
   const [interimText, setInterimText] = useState('');
   const [highlights, setHighlights] = useState([]);
   const [isProcessingAI, setIsProcessingAI] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
 
   const audioEngineRef = useRef(null);
   const timerIntervalRef = useRef(null);
@@ -82,6 +83,7 @@ export default function Home() {
     setInterimText('');
     setHighlights([]);
     setDuration(0);
+    setIsMicMuted(false);
 
     const title = meetingTitle.trim() || `Vinxa Sync — ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
     setMeetingTitle(title);
@@ -165,6 +167,15 @@ export default function Home() {
       setActiveSpeaker(nextSpeaker);
     } else {
       setActiveSpeaker(prev => prev === 'Speaker 1' ? 'Speaker 2' : 'Speaker 1');
+    }
+  };
+
+  const handleToggleMicMute = () => {
+    if (audioEngineRef.current) {
+      const muted = audioEngineRef.current.toggleMicMute();
+      setIsMicMuted(muted);
+    } else {
+      setIsMicMuted(prev => !prev);
     }
   };
 
@@ -269,6 +280,8 @@ export default function Home() {
           audioLevel={audioLevel}
           sources={captureTab ? ['Mic', 'Tab Audio'] : ['Mic']}
           currentSpeaker={activeSpeaker}
+          isMicMuted={isMicMuted}
+          onToggleMicMute={handleToggleMicMute}
           onToggleSpeaker={handleToggleSpeaker}
           onAddHighlight={handleAddHighlight}
           onStop={handleStopRecording}

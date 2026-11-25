@@ -1,11 +1,13 @@
 'use client';
-import { Bookmark, Square, Volume2, Users, Radio } from 'lucide-react';
+import { Bookmark, Square, Volume2, Users, Radio, Mic, MicOff } from 'lucide-react';
 
 export default function RecordingBanner({
   durationSeconds,
   audioLevel,
   sources,
   currentSpeaker = 'Speaker 1',
+  isMicMuted = false,
+  onToggleMicMute,
   onToggleSpeaker,
   onAddHighlight,
   onStop
@@ -44,6 +46,24 @@ export default function RecordingBanner({
 
         {/* Center: Audio Source & Active Speaker Selector */}
         <div className="flex items-center gap-2">
+          {/* Host Mic Mute Toggle */}
+          <button
+            onClick={onToggleMicMute}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
+              isMicMuted
+                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm'
+                : 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border-white/[0.08] hover:border-indigo-500/40'
+            }`}
+            title={isMicMuted ? 'Your mic is MUTED. Click to unmute.' : 'Click to mute your mic (record only meeting tab/others)'}
+          >
+            {isMicMuted ? (
+              <MicOff className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+            ) : (
+              <Mic className="w-3.5 h-3.5 text-emerald-400" />
+            )}
+            <span>{isMicMuted ? 'Mic Muted' : 'Mic On'}</span>
+          </button>
+
           <button
             onClick={onToggleSpeaker}
             className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/[0.08] hover:border-indigo-500/40 transition-all group"
