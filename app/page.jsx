@@ -39,6 +39,7 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [captureTab, setCaptureTab] = useState(true);
   const [sttEngine, setSttEngine] = useState('native'); // 'native' | 'deepgram'
+  const [language, setLanguage] = useState('en-IN'); // 'en-IN' | 'hi-IN' | 'en-US'
   const [activeSpeaker, setActiveSpeaker] = useState('Speaker 1');
   const [meetingTitle, setMeetingTitle] = useState('');
   const [duration, setDuration] = useState(0);
@@ -136,7 +137,7 @@ export default function Home() {
         }
       );
 
-      await engine.start({ captureTab, preferredEngine: sttEngine });
+      await engine.start({ captureTab, preferredEngine: sttEngine, language });
       audioEngineRef.current = engine;
       setIsRecording(true);
 
@@ -358,21 +359,43 @@ export default function Home() {
                       </label>
                     </div>
 
-                    {/* STT Engine Selector */}
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-400 font-medium">Engine:</span>
-                      <select
-                        value={sttEngine}
-                        onChange={(e) => setSttEngine(e.target.value)}
-                        className="bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 rounded-xl px-3 py-1.5 text-xs text-indigo-300 focus:outline-none cursor-pointer transition-colors"
-                      >
-                        <option value="native" className="bg-[#10131B] text-slate-200">
-                          ⚡ Web Speech Engine (Instant &lt;0.2s, Free)
-                        </option>
-                        <option value="deepgram" className="bg-[#10131B] text-slate-200">
-                          ☁️ Deepgram Nova-2 (Cloud AI Diarization)
-                        </option>
-                      </select>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Language Selector */}
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-slate-400 font-medium">Language:</span>
+                        <select
+                          value={language}
+                          onChange={(e) => setLanguage(e.target.value)}
+                          className="bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 rounded-xl px-3 py-1.5 text-xs text-indigo-300 focus:outline-none cursor-pointer transition-colors"
+                        >
+                          <option value="en-IN" className="bg-[#10131B] text-slate-200">
+                            🇮🇳 Hinglish (English / Hindi Mix)
+                          </option>
+                          <option value="hi-IN" className="bg-[#10131B] text-slate-200">
+                            🇮🇳 Pure Hindi (हिन्दी)
+                          </option>
+                          <option value="en-US" className="bg-[#10131B] text-slate-200">
+                            🌐 English (Global)
+                          </option>
+                        </select>
+                      </div>
+
+                      {/* STT Engine Selector */}
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="text-slate-400 font-medium">Engine:</span>
+                        <select
+                          value={sttEngine}
+                          onChange={(e) => setSttEngine(e.target.value)}
+                          className="bg-white/[0.04] border border-white/10 hover:border-indigo-500/40 rounded-xl px-3 py-1.5 text-xs text-indigo-300 focus:outline-none cursor-pointer transition-colors"
+                        >
+                          <option value="native" className="bg-[#10131B] text-slate-200">
+                            ⚡ Web Speech Engine (Instant &lt;0.2s, Free)
+                          </option>
+                          <option value="deepgram" className="bg-[#10131B] text-slate-200">
+                            ☁️ Deepgram Nova-2 (Cloud AI Diarization)
+                          </option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
