@@ -47,10 +47,10 @@ ${cleanTranscript.map(t => `[${t.time}] ${t.speaker}: ${t.text}`).join('\n')}
     const geminiKey = process.env.GEMINI_API_KEY;
     const grokKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
 
-    // 1. Primary Engine: Google Gemini 1.5 Flash
+    // 1. Primary Engine: Google Gemini (Supported Models)
     if (geminiKey) {
-      try {
-        const prompt = `You are Vinxa Executive Meeting Assistant. Answer the user's question accurately and objectively based solely on the provided meeting context.
+      const geminiModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro'];
+      const prompt = `You are Vinxa Executive Meeting Assistant. Answer the user's question accurately and objectively based solely on the provided meeting context.
 
 STRICT ACCURACY RULES:
 1. Grounding: Answer ONLY based on what is stated in the transcript, decisions, or action items below.
@@ -63,25 +63,28 @@ ${contextText}
 
 Question: ${question}`;
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.1,
-              topP: 0.8
-            }
-          })
-        });
+      for (const model of geminiModels) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.1,
+                topP: 0.8
+              }
+            })
+          });
 
-        if (res.ok) {
-          const data = await res.json();
-          const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          return NextResponse.json({ answer });
+          if (res.ok) {
+            const data = await res.json();
+            const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (answer) return NextResponse.json({ answer });
+          }
+        } catch (err) {
+          console.warn(`Gemini chat (${model}) failed:`, err);
         }
-      } catch (err) {
-        console.warn('Gemini chat failed, trying backup', err);
       }
     }
 

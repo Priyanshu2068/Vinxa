@@ -38,15 +38,15 @@ export async function POST(request) {
     const geminiKey = (process.env.GEMINI_API_KEY || '').trim();
     const grokKey = (process.env.GROK_API_KEY || process.env.XAI_API_KEY || '').trim();
 
-    // 1. Primary Engine: Google Gemini (Try gemini-1.5-flash, gemini-2.0-flash, gemini-1.5-pro)
+    // 1. Primary Engine: Google Gemini (Supported 2025/2026 Models)
     if (geminiKey) {
-      const geminiModels = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+      const geminiModels = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro', 'gemini-3.5-flash'];
       const prompt = `You are Vinxa Executive Meeting Intelligence Engine. Extract comprehensive, accurate meeting minutes from the provided transcript.
 
 STRICT INSTRUCTIONS:
 1. Grounding: Rely strictly on what was actually said. Never fabricate tasks or decisions that were not mentioned.
 2. Filter: Disregard audio check banter ("can you hear me", "am I audible").
-3. Summary: Provide a high-quality, comprehensive paragraph (3-4 sentences) capturing the core purpose, technical or business topics reviewed, and overarching outcome.
+3. Summary: Provide a high-quality, professional 3-4 sentence executive summary synthesizing the core purpose, technical or business topics discussed, and overarching outcome. Do NOT simply quote lines; write a cohesive narrative summary.
 4. Decisions: List all concrete decisions, agreements, or choices confirmed during the conversation. If none, return [].
 5. Action Items: List all commitments and tasks.
    - "task": Clear actionable description starting with an active verb.
@@ -81,7 +81,7 @@ ${conversationText}`;
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: {
                 responseMimeType: 'application/json',
-                temperature: 0.1,
+                temperature: 0.2,
                 topP: 0.8
               }
             })
@@ -154,13 +154,13 @@ ${conversationText}`;
     const turns = coalesced;
     const firstSpeaker = turns[0]?.speaker || 'Speaker 1';
 
-    // Build rich summary from coalesced thoughts
+    // Build narrative summary from coalesced thoughts
     let dynamicSummary = '';
     if (turns.length === 0) {
-      dynamicSummary = 'Meeting session completed. No spoken audio transcript was recorded.';
+      dynamicSummary = 'Meeting session completed. No audible speech segments detected in this transcript.';
     } else {
-      const summarySentences = turns.map(t => `${t.speaker} discussed: "${t.text}"`);
-      dynamicSummary = `Meeting synchronization for "${title || 'Meeting Sync'}": ` + summarySentences.slice(0, 3).join('. ') + '.';
+      const thoughts = turns.map(t => t.text.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+      dynamicSummary = `Meeting synchronization for "${title || 'Meeting Sync'}": The team reviewed core project items. Discussion points included ${thoughts.slice(0, 3).join(', and ')}. Key objectives and follow-up activities were noted for alignment.`;
     }
 
     // Extract real decisions from actual words
@@ -168,11 +168,11 @@ ${conversationText}`;
     const dynamicDecisions = [];
     for (const turn of turns) {
       if (decisionKeywords.some(k => turn.text.toLowerCase().includes(k))) {
-        dynamicDecisions.push(`${turn.speaker}: "${turn.text}"`);
+        dynamicDecisions.push(`${turn.speaker}: ${turn.text.trim()}`);
       }
     }
     if (dynamicDecisions.length === 0 && turns.length > 0) {
-      dynamicDecisions.push(`Aligned on: "${turns[turns.length - 1].text.slice(0, 120)}"`);
+      dynamicDecisions.push(`Aligned on: ${turns[turns.length - 1].text.slice(0, 120)}`);
     }
 
     // Extract real action items
